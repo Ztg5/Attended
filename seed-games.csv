@@ -1,0 +1,67 @@
+league,date,home_team,away_team,venue_override,claimed_result,notes,needs_review
+NFL,2025-12-28,Bills,Eagles,,Bills L 13-12,,no
+NFL,2025-12-21,Browns,Bills,,Bills W 23-20,"Had Tickle, me up to Cleveland",no
+NFL,2025-11-09,Dolphins,Bills,,Bills L 30-13,"Camille and I went in Miami",no
+NFL,2025-11-02,Bills,Chiefs,,Bills W 28-21,"Came home for last-minute Ullman tickets with Meg and Dad",no
+NFL,2024-09-24,Bills,Jaguars,,Bills W 47-10,,no
+NFL,2024-12-01,Bills,49ers,,Bills W 35-10,,no
+NFL,,Bills,Patriots,,Bills W,"2024 season, exact date unknown — resolve from Bills 2024 home schedule",yes
+NFL,2023-09-17,Bills,Raiders,,Bills W 38-10,"Pop and I, bounce back from slow start to season",no
+NFL,2023-12-17,Bills,Cowboys,,Bills W 31-10,"Domination through run game, big tailgate",no
+NFL,2024-01-15,Bills,Steelers,,Bills W 31-17,"Wild card game, snow game, went with Alex",no
+NFL,2022-09-19,Bills,Titans,,Bills W 41-7,"Monday night home opener, Dad Meg I",no
+NFL,2022-11-20,Bills,Browns,Ford Field,Bills W 31-23,"Home game relocated to Detroit for snowstorm, with Cummins and Hazen",no
+NFL,2021-09-12,Bills,Steelers,,Steelers W 23-16,"Home opener, badly played game",no
+NFL,2021-11-21,Bills,Colts,,Colts W 41-15,"Game with Ryan Anderson, brutal game",no
+NFL,2022-01-02,Bills,Falcons,,Bills W 29-15,Southern Graulichs,no
+NFL,2022-01-15,Bills,Patriots,,Bills W 47-17,"Playoffs, domination, went with Tino and Kinsman",no
+NFL,2019-09-22,Bills,Bengals,,Bills W 21-17,,no
+NFL,2019-09-29,Bills,Patriots,,Patriots W 16-10,,no
+NFL,2019-10-27,Bills,Eagles,,Eagles W 31-13,,no
+NFL,2018-09-16,Bills,Chargers,,Chargers W 31-20,Josh Allen's first career start,no
+NFL,2018-10-07,Bills,Titans,,Bills W 13-12,Game-winning field goal,no
+NFL,2018-12-09,Bills,Jets,,Jets W 27-23,Went with Wags,no
+NFL,2018-12-16,Bills,Lions,,Bills W 14-13,Murray Purcible,no
+NFL,2017-09-10,Bills,Jets,,Bills W 21-12,,no
+NFL,2017-10-22,Bills,Buccaneers,,Bills W 30-27,,no
+NFL,2016-11-27,Bills,Jaguars,,Bills W 28-21,"Went with Ben, went in the tunnel and on the field",no
+NFL,2016-10-30,Bills,Patriots,,Patriots W 41-25,"Rain game, Meghan's first game",no
+NFL,2016-10-16,Bills,49ers,,Bills W 45-16,"Kap kneeled and got chants of USA",no
+NFL,2016-12-18,Bills,Browns,,Bills W 33-13,"Johnny Manziel's first ever game action (note: Manziel's debut was actually the 2014-11-30 Bills-Browns game — verify which game this memory belongs to)",yes
+NFL,2015-09-20,Bills,Patriots,,Patriots W 40-32,,no
+NFL,2015-10-04,Bills,Giants,,Giants W 24-10,Went on field with Ryan Anderson after,no
+NFL,2015-11-08,Bills,Dolphins,,Bills W 33-17,"Quinn and Ben, left early, sat in the box",no
+NFL,2014-11-30,Bills,Browns,,Bills W 26-10,Game with Wags,no
+NFL,2013-09-15,Bills,Panthers,,Bills W 24-23,EJ Manuel game-winning drive,no
+NFL,2013-11-17,Bills,Jets,,Bills W 37-14,,no
+NFL,2012-09-30,Bills,Patriots,,Patriots W 52-28,,no
+NFL,2011-11-06,Bills,Jets,,Jets W 27-11,,no
+NFL,2011-12-04,Bills,Titans,,Titans W 23-17,,no
+NFL,2010-10-03,Bills,Jets,,Jets W 38-14,,no
+MLB,2026-06-27,Guardians,Mariners,,,,no
+MLB,2026-05-29,Guardians,Red Sox,,,,no
+NBA,2026-04-20,Cavs,Raptors,,,,no
+MLB,2025-08-12,Guardians,Marlins,,,,no
+MLB,2025-07-03,Cubs,Guardians,,,,no
+MLB,2025-05-26,Guardians,Dodgers,,,,no
+MLB,2025-05-13,Guardians,Brewers,,,,no
+MLB,2025-05-09,Guardians,Phillies,,,,no
+MLB,2025-04-26,Guardians,Red Sox,,,,no
+NBA,2024-12-05,Cavs,Nuggets,,,,no
+MLB,2024-09-14,Guardians,Rays,,,,no
+MLB,2024-08-24,Guardians,Rangers,,,,no
+MLB,2024-08-13,Guardians,Cubs,,,,no
+MLB,2024-05-17,Guardians,Twins,,,,no
+MLB,2024-04-20,Guardians,Athletics,,,,no
+MLB,2024-04-14,Guardians,Yankees,,,,no
+MLB,2023-08-05,Guardians,White Sox,,,,no
+MLB,2023-07-03,Guardians,Braves,,,,no
+MLB,2023-06-09,Guardians,Astros,,,,no
+MLB,2023-05-26,Guardians,Cardinals,,,,no
+NBA,2023-03-08,Heat,Cavs,,,,no
+NBA,2022-12-06,Cavs,Lakers,,,,no
+MLB,2022-10-01,Guardians,Royals,,,,no
+MLB,2022-09-16,Guardians,Twins,,,,no
+MLB,2022-07-02,Guardians,Yankees,,,,no
+NBA,2021-11-10,Cavs,Wizards,,,,no
+MLB,2021-06-15,Blue Jays,Yankees,Sahlen Field,,"Blue Jays played home games in Buffalo in mid-2021 due to COVID border rules — verify venue from ESPN data",yes

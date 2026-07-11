@@ -1,0 +1,41 @@
+{
+  "name": "attended",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "seed:espn": "tsx --env-file=.env scripts/seed-espn.ts",
+    "import": "tsx --env-file=.env scripts/import-games.ts",
+    "import:dry": "tsx scripts/import-games.ts --dry-run"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.1",
+    "csv-parse": "^5.6.0",
+    "d3-geo": "^3.1.1",
+    "lucide-react": "^0.474.0",
+    "next": "^15.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "topojson-client": "^3.1.0",
+    "us-atlas": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "^3.1.0",
+    "@types/node": "^22.13.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@types/topojson-client": "^3.1.5",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "prisma": "^6.3.1",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

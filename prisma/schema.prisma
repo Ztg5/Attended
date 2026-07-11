@@ -1,0 +1,90 @@
+// Attended — Phase 1 schema
+// Single-user personal app tracking pro sporting events attended.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model League {
+  id    Int    @id @default(autoincrement())
+  code  String @unique // NFL / MLB / NBA / NHL
+  name  String
+  teams Team[]
+  games Game[]
+}
+
+model Team {
+  id           Int     @id @default(autoincrement())
+  league       League  @relation(fields: [leagueId], references: [id])
+  leagueId     Int
+  espnTeamId   String // ESPN's team id — the anchor for exact game matching
+  name         String // "Buffalo Bills"
+  nickname     String // "Bills"
+  location     String? // "Buffalo"
+  abbreviation String // "BUF"
+  logoUrl      String?
+  primaryColor String? // hex, no leading '#'
+  active       Boolean @default(true)
+
+  homeGames Game[] @relation("HomeTeam")
+  awayGames Game[] @relation("AwayTeam")
+
+  @@unique([leagueId, espnTeamId])
+  @@index([leagueId])
+}
+
+model Venue {
+  id          Int     @id @default(autoincrement())
+  espnVenueId String  @unique // one venue = one ESPN id, regardless of name changes
+  name        String // current name
+  city        String?
+  state       String?
+  latitude    Float?
+  longitude   Float?
+  nameHistory Json? // optional: names ESPN has used over time
+  games       Game[]
+}
+
+model Game {
+  id         Int      @id @default(autoincrement())
+  league     League   @relation(fields: [leagueId], references: [id])
+  leagueId   Int
+  date       DateTime
+  seasonYear Int
+
+  homeTeam   Team? @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  homeTeamId Int?
+  awayTeam   Team? @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  awayTeamId Int?
+
+  venue   Venue? @relation(fields: [venueId], references: [id])
+  venueId Int?
+
+  homeScore Int?
+  awayScore Int?
+
+  status          String // final / pending / needs_review
+  espnEventId     String? @unique
+  isPostseason    Boolean @default(false)
+  postseasonRound String?
+  wentToOvertime  Boolean @default(false)
+  attendance      Int?
+  detailsJson     Json? // raw-ish ESPN blob: line scores, broadcast, weather, notes
+  notes           String? // personal memories from the CSV
+
+  // Provenance / review bookkeeping
+  claimedResult String? // the CSV's claimed_result, kept for auditing
+  matchNote     String? // why it needs review, or what was corrected during import
+
+  createdAt DateTime @default(now())
+
+  @@index([leagueId])
+  @@index([date])
+  @@index([status])
+}

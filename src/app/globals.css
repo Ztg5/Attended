@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   Design tokens — see DESIGN.md. OKLCH throughout. Near-neutral architecture so
+   that every saturated color on screen carries data meaning.
+   ========================================================================== */
+:root {
+  /* Architecture */
+  --bg: oklch(1 0 0);
+  --surface: oklch(0.968 0.003 255);
+  --surface-2: oklch(0.945 0.004 255);
+  --border: oklch(0.9 0.005 255);
+  --ink: oklch(0.22 0.02 255);
+  --muted: oklch(0.48 0.015 255);
+  --faint: oklch(0.56 0.012 255);
+  --logo-plate: oklch(0.965 0.003 255);
+
+  /* System accent — interactive chrome only */
+  --primary: oklch(0.541 0.122 248);
+  --primary-hover: oklch(0.492 0.126 248);
+  --primary-weak: oklch(0.951 0.02 248);
+  --on-primary: oklch(0.99 0 0);
+
+  /* Milestone accent — records / collection-complete, sparingly */
+  --gold: oklch(0.82 0.13 85);
+  --on-gold: oklch(0.26 0.03 85);
+
+  /* Semantic result colors — always paired with an icon/label, never color alone */
+  --win: oklch(0.56 0.14 150);
+  --on-win: oklch(0.99 0 0);
+  --loss: oklch(0.55 0.19 27);
+  --on-loss: oklch(0.99 0 0);
+  --live: oklch(0.72 0.16 65);
+  --on-live: oklch(0.26 0.04 65);
+  --review: oklch(0.6 0.03 285);
+
+  --focus: var(--primary);
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  /* z-index scale (semantic) */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-backdrop: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
+}
+
+:root[data-theme="dark"] {
+  --bg: oklch(0.17 0.008 255);
+  --surface: oklch(0.215 0.01 255);
+  --surface-2: oklch(0.255 0.011 255);
+  --border: oklch(0.3 0.012 255);
+  --ink: oklch(0.95 0.005 255);
+  --muted: oklch(0.7 0.012 255);
+  --faint: oklch(0.6 0.012 255);
+  --logo-plate: oklch(0.9 0.008 255);
+
+  --primary: oklch(0.7 0.13 248);
+  --primary-hover: oklch(0.76 0.13 248);
+  --primary-weak: oklch(0.28 0.05 248);
+  --on-primary: oklch(0.16 0.02 255);
+
+  --gold: oklch(0.8 0.13 85);
+  --on-gold: oklch(0.22 0.03 85);
+  --win: oklch(0.66 0.14 150);
+  --loss: oklch(0.64 0.19 27);
+  --live: oklch(0.76 0.15 65);
+  --on-live: oklch(0.2 0.04 65);
+  --review: oklch(0.68 0.03 285);
+}
+
+/* No-JS / system-preference dark default (when the user hasn't toggled a theme) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.17 0.008 255);
+    --surface: oklch(0.215 0.01 255);
+    --surface-2: oklch(0.255 0.011 255);
+    --border: oklch(0.3 0.012 255);
+    --ink: oklch(0.95 0.005 255);
+    --muted: oklch(0.7 0.012 255);
+    --faint: oklch(0.6 0.012 255);
+    --logo-plate: oklch(0.9 0.008 255);
+    --primary: oklch(0.7 0.13 248);
+    --primary-hover: oklch(0.76 0.13 248);
+    --primary-weak: oklch(0.28 0.05 248);
+    --on-primary: oklch(0.16 0.02 255);
+    --gold: oklch(0.8 0.13 85);
+    --on-gold: oklch(0.22 0.03 85);
+    --win: oklch(0.66 0.14 150);
+    --loss: oklch(0.64 0.19 27);
+    --live: oklch(0.76 0.15 65);
+    --on-live: oklch(0.2 0.04 65);
+    --review: oklch(0.68 0.03 285);
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* Scores, stats, records — the command-center voice */
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Personal notes — the memory layer */
+  .note {
+    font-family: var(--font-serif);
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  ::selection {
+    background: var(--primary-weak);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
