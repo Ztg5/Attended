@@ -98,6 +98,79 @@
   }
 }
 
+/* Fallback for browsers without OKLCH support (older mobile Safari < 15.4 /
+   Chrome < 111). Without this, every oklch() background and border is dropped and
+   the UI renders as unstyled text. Modern browsers ignore this block and keep OKLCH. */
+@supports not (color: oklch(0 0 0)) {
+  :root {
+    --bg: #ffffff;
+    --surface: #f3f4f6;
+    --surface-2: #ebedef;
+    --border: #dcdee1;
+    --ink: #141b24;
+    --muted: #585e66;
+    --faint: #70757c;
+    --logo-plate: #f2f3f5;
+    --primary: #2873b2;
+    --primary-hover: #0f64a4;
+    --primary-weak: #e5f0fc;
+    --on-primary: #fcfcfc;
+    --gold: #ebbd57;
+    --on-gold: #2b2313;
+    --win: #218a45;
+    --on-win: #fcfcfc;
+    --loss: #c9302d;
+    --on-loss: #fcfcfc;
+    --live: #e78c08;
+    --on-live: #31200e;
+    --review: #7e7e92;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1013;
+    --surface: #161a1e;
+    --surface-2: #1f2328;
+    --border: #2a2e34;
+    --ink: #eceff2;
+    --muted: #9a9fa6;
+    --faint: #7b8187;
+    --logo-plate: #dadee3;
+    --primary: #56a4eb;
+    --primary-hover: #69b7ff;
+    --primary-weak: #132b40;
+    --on-primary: #080e16;
+    --gold: #e4b750;
+    --on-gold: #211909;
+    --win: #47aa62;
+    --loss: #e95048;
+    --live: #f19b37;
+    --on-live: #221202;
+    --review: #9696ab;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1013;
+      --surface: #161a1e;
+      --surface-2: #1f2328;
+      --border: #2a2e34;
+      --ink: #eceff2;
+      --muted: #9a9fa6;
+      --faint: #7b8187;
+      --logo-plate: #dadee3;
+      --primary: #56a4eb;
+      --primary-hover: #69b7ff;
+      --primary-weak: #132b40;
+      --on-primary: #080e16;
+      --gold: #e4b750;
+      --on-gold: #211909;
+      --win: #47aa62;
+      --loss: #e95048;
+      --live: #f19b37;
+      --on-live: #221202;
+      --review: #9696ab;
+    }
+  }
+}
+
 @layer base {
   html {
     color-scheme: light dark;
