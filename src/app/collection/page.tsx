@@ -6,7 +6,7 @@ import { TeamLogo } from "@/components/TeamLogo";
 import { StadiumMap } from "@/components/StadiumMap";
 import { stateAbbr } from "@/lib/us-states";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function CollectionPage() {
   const [checklist, venues] = await Promise.all([getChecklist(), getVenues()]);

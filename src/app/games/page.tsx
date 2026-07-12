@@ -4,7 +4,7 @@ import { getAllGames } from "@/lib/stats";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { GameLog } from "./GameLog";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function GamesPage() {
   const games = await getAllGames();

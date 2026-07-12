@@ -103,10 +103,39 @@ function toLite(g: any): GameLite {
   };
 }
 
-const INCLUDE = { league: true, homeTeam: true, awayTeam: true, venue: true } as const;
+const teamSelect = {
+  id: true,
+  nickname: true,
+  name: true,
+  abbreviation: true,
+  logoUrl: true,
+  primaryColor: true,
+} as const;
+
+// Select only what the UI needs — crucially NOT detailsJson, the heavy raw ESPN
+// blob, which would otherwise be transferred for every game on every read.
+const GAME_SELECT = {
+  id: true,
+  date: true,
+  seasonYear: true,
+  homeTeamId: true,
+  awayTeamId: true,
+  homeScore: true,
+  awayScore: true,
+  status: true,
+  isPostseason: true,
+  postseasonRound: true,
+  wentToOvertime: true,
+  attendance: true,
+  notes: true,
+  league: { select: { code: true } },
+  homeTeam: { select: teamSelect },
+  awayTeam: { select: teamSelect },
+  venue: { select: { name: true, city: true, state: true } },
+} as const;
 
 export async function getAllGames(): Promise<GameLite[]> {
-  const games = await prisma.game.findMany({ include: INCLUDE, orderBy: { date: "desc" } });
+  const games = await prisma.game.findMany({ select: GAME_SELECT, orderBy: { date: "desc" } });
   return games.map(toLite);
 }
 
@@ -134,7 +163,7 @@ function personalResult(g: GameLite, followed: Set<number>) {
 }
 
 export async function getDashboard(): Promise<DashboardData> {
-  const games = (await prisma.game.findMany({ include: INCLUDE })).map(toLite);
+  const games = (await prisma.game.findMany({ select: GAME_SELECT })).map(toLite);
   const asc = [...games].sort((a, b) => a.date.localeCompare(b.date));
 
   // Appearances + distinct opponents per team -> followed set.

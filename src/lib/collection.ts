@@ -69,8 +69,23 @@ export interface VenueVisit {
 
 export async function getVenues(): Promise<VenueVisit[]> {
   const venues = await prisma.venue.findMany({
-    include: {
-      games: { include: { homeTeam: true, league: true }, orderBy: { date: "asc" } },
+    select: {
+      id: true,
+      name: true,
+      city: true,
+      state: true,
+      latitude: true,
+      longitude: true,
+      games: {
+        orderBy: { date: "asc" },
+        select: {
+          date: true,
+          league: { select: { code: true } },
+          homeTeam: {
+            select: { id: true, name: true, logoUrl: true, primaryColor: true },
+          },
+        },
+      },
     },
   });
 

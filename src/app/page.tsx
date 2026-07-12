@@ -9,9 +9,9 @@ import { GameLine } from "@/components/GameLine";
 import { GameRow } from "@/components/GameRow";
 import { PendingRefresh } from "@/components/PendingRefresh";
 
-// Cached ISR — the dashboard is read-heavy and rarely changes. Review actions
-// revalidate "/" explicitly, so edits still propagate promptly.
-export const revalidate = 60;
+// Render on demand (not prerendered at build) so deploys never depend on the DB
+// being reachable. Queries are trimmed (see stats.ts) so per-request cost is small.
+export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const [d, needsReview, pendingCount] = await Promise.all([
