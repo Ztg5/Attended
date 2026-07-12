@@ -42,7 +42,7 @@ export function GameLog({ games, leagues }: { games: GameLite[]; leagues: string
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
           <button className={tabCls(league === "ALL")} onClick={() => setLeague("ALL")}>
             All
@@ -54,13 +54,13 @@ export function GameLog({ games, leagues }: { games: GameLite[]; leagues: string
           ))}
         </div>
 
-        <label className="relative ml-auto">
+        <label className="relative sm:ml-auto sm:w-56">
           <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search team, venue, note…"
-            className="w-56 rounded-lg border border-border bg-surface py-1.5 pl-8 pr-2.5 text-sm outline-none focus:border-primary"
+            className="w-full rounded-lg border border-border bg-surface py-1.5 pl-8 pr-2.5 text-sm outline-none focus:border-primary"
           />
         </label>
 

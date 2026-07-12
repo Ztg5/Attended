@@ -26,14 +26,14 @@ export default async function Home() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       {/* Masthead */}
-      <div className="mb-8 flex items-end justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Attended</h1>
           <p className="mt-1 text-sm text-muted">
             Every professional sporting event I&apos;ve attended.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {needsReview > 0 && (
             <ButtonLink href="/review" variant="secondary">
               <ClipboardCheck size={15} style={{ color: "var(--review)" }} />
