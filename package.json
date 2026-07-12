@@ -15,7 +15,8 @@
     "db:push": "prisma db push",
     "seed:espn": "tsx --env-file=.env scripts/seed-espn.ts",
     "import": "tsx --env-file=.env scripts/import-games.ts",
-    "import:dry": "tsx scripts/import-games.ts --dry-run"
+    "import:dry": "tsx scripts/import-games.ts --dry-run",
+    "backfill:summaries": "tsx --env-file=.env scripts/backfill-summaries.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.3.1",

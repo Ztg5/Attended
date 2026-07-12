@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ChevronDown, MapPin, Trophy, Timer, StickyNote, Pencil, Trash2, Check, X } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, MapPin, Trophy, Timer, StickyNote, Pencil, Trash2, Check, X, BarChart3 } from "lucide-react";
 import { TeamLogo } from "./TeamLogo";
 import { Button } from "./Button";
 import { updateGame, deleteGame } from "@/app/log/actions";
@@ -26,7 +27,7 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
   const decided = g.homeScore != null && g.awayScore != null;
   const homeWin = decided && (g.homeScore as number) > (g.awayScore as number);
   const awayWin = decided && (g.awayScore as number) > (g.homeScore as number);
-  const expandable = Boolean(g.notes || g.venueName || g.attendance || manage);
+  const expandable = true; // every game has a box-score detail page
   const otLabel = g.leagueCode === "MLB" ? "XI" : "OT";
 
   const inputCls = "rounded border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-primary";
@@ -101,6 +102,13 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
             )}
           </div>
           {g.notes && <p className="note max-w-[68ch] leading-relaxed text-ink">{g.notes}</p>}
+
+          <Link
+            href={`/games/${g.id}`}
+            className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover"
+          >
+            <BarChart3 size={13} /> View box score
+          </Link>
 
           {manage && !editing && (
             <div className="mt-1 flex items-center gap-2">
