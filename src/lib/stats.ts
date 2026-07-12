@@ -1,15 +1,19 @@
 /**
  * Derived dashboard data — computed from the games table on every read, never stored.
  *
- * "Followed team" nuance: the plan says a followed team is one seen 3+ times (Bills,
- * Guardians, Cavs). Taken literally, "3+ appearances" also catches frequent *opponents*
- * (the Patriots show up 6 times, but only ever against the Bills). So we refine it to
- * **3+ games against 3+ distinct opponents** — you keep coming back to see *them*. That
- * yields exactly {Bills, Guardians, Cavs} and excludes rivals you only saw as the away
- * team. Each attended game has at most one followed team (they never play each other),
- * so "my result" is unambiguous.
+ * Records and win streaks are computed only for the owner's FAVORITE_TEAMS (below) —
+ * an explicit list, not a heuristic. Each favorite is in a different league, so no
+ * attended game has two favorites, and "my result" is unambiguous.
  */
 import { prisma } from "./db";
+
+/** The owner's teams. Matched by league + ESPN nickname (stable across re-imports). */
+export const FAVORITE_TEAMS: { league: string; nickname: string }[] = [
+  { league: "NFL", nickname: "Bills" },
+  { league: "NBA", nickname: "Cavaliers" },
+  { league: "MLB", nickname: "Guardians" },
+  { league: "NHL", nickname: "Sabres" },
+];
 
 export interface TeamLite {
   id: number;
@@ -166,27 +170,13 @@ export async function getDashboard(): Promise<DashboardData> {
   const games = (await prisma.game.findMany({ select: GAME_SELECT })).map(toLite);
   const asc = [...games].sort((a, b) => a.date.localeCompare(b.date));
 
-  // Appearances + distinct opponents per team -> followed set.
-  const appear = new Map<number, { team: TeamLite; opps: Set<number> }>();
-  const bump = (t: TeamLite | null, opp: TeamLite | null) => {
-    if (!t) return;
-    const e = appear.get(t.id) ?? { team: t, opps: new Set<number>() };
-    if (opp) e.opps.add(opp.id);
-    appear.set(t.id, e);
-  };
-  for (const g of games) {
-    bump(g.home, g.away);
-    bump(g.away, g.home);
-  }
-  const followedIds = new Set<number>();
-  const followedTeams: TeamLite[] = [];
-  for (const [id, e] of appear) {
-    const count = games.filter((g) => g.home?.id === id || g.away?.id === id).length;
-    if (count >= 3 && e.opps.size >= 3) {
-      followedIds.add(id);
-      followedTeams.push(e.team);
-    }
-  }
+  // Favorite teams (explicit) — records/streaks are computed only for these.
+  const favTeams = await prisma.team.findMany({
+    where: { OR: FAVORITE_TEAMS.map((f) => ({ league: { code: f.league }, nickname: f.nickname })) },
+    select: { id: true, nickname: true, name: true, abbreviation: true, logoUrl: true, primaryColor: true },
+  });
+  const followedIds = new Set(favTeams.map((t) => t.id));
+  const followedTeams: TeamLite[] = favTeams;
 
   // Records (overall + per followed team).
   const overall: Record2 = { wins: 0, losses: 0, ties: 0 };

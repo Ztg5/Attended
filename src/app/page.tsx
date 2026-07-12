@@ -71,7 +71,7 @@ export default async function Home() {
       </p>
 
       {/* Followed teams */}
-      <Section title="By team" hint="Teams seen 3+ times across 3+ opponents">
+      <Section title="By team" hint="Your record with your teams">
         <div className="divide-y divide-border rounded-lg border border-border bg-surface">
           {d.followed.map((f) => (
             <div key={f.team.id} className="flex items-center gap-3 px-4 py-3">
