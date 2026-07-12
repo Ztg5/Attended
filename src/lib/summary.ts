@@ -57,10 +57,11 @@ const MLB_WHITELIST: Record<string, string[]> = {
   pitching: ["strikeouts", "earnedRuns", "ERA", "walks", "hits", "saves"],
 };
 
-function periodLabels(count: number, regulation: number): string[] {
-  return Array.from({ length: count }, (_, i) =>
-    i < regulation ? String(i + 1) : i === regulation ? "OT" : `${i - regulation + 1}OT`
-  );
+function periodLabels(count: number, regulation: number, isBaseball: boolean): string[] {
+  return Array.from({ length: count }, (_, i) => {
+    if (i < regulation || isBaseball) return String(i + 1); // extra innings keep counting
+    return i === regulation ? "OT" : `${i - regulation + 1}OT`;
+  });
 }
 
 function parseLineScore(raw: any, leagueCode: string): LineScore | null {
@@ -88,7 +89,7 @@ function parseLineScore(raw: any, leagueCode: string): LineScore | null {
   const maxPeriods = Math.max(0, ...rows.map((r) => r.periods.length));
   if (maxPeriods === 0) return null;
 
-  return { periodLabels: periodLabels(maxPeriods, regulation), showHitsErrors: isBaseball, rows };
+  return { periodLabels: periodLabels(maxPeriods, regulation, isBaseball), showHitsErrors: isBaseball, rows };
 }
 
 function statMap(team: any): { grouped: boolean; team: any } {
