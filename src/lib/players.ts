@@ -70,6 +70,7 @@ export interface PlayerListItem {
   position: string | null;
   headshotUrl: string | null;
   timesSeen: number;
+  leagueCode: string | null;
 }
 
 export async function getPlayersList(): Promise<PlayerListItem[]> {
@@ -80,6 +81,8 @@ export async function getPlayersList(): Promise<PlayerListItem[]> {
       position: true,
       headshotUrl: true,
       _count: { select: { gamePlayers: true } },
+      // one game is enough to know the player's league (a player is one sport)
+      gamePlayers: { take: 1, select: { game: { select: { league: { select: { code: true } } } } } },
     },
   });
   return players
@@ -89,6 +92,7 @@ export async function getPlayersList(): Promise<PlayerListItem[]> {
       position: p.position,
       headshotUrl: p.headshotUrl,
       timesSeen: p._count.gamePlayers,
+      leagueCode: p.gamePlayers[0]?.game.league.code ?? null,
     }))
     .sort((a, b) => b.timesSeen - a.timesSeen || a.name.localeCompare(b.name));
 }

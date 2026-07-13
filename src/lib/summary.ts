@@ -201,14 +201,28 @@ function toNum(v: unknown): number | null {
  * stats merged across categories (a QB's passing + rushing, etc.). Non-numeric and
  * compound values are dropped. Returns [] when there's no player data (thin old games).
  */
+// ESPN's NFL box score omits athlete position; infer a coarse one from the stat
+// category (highest-priority category the player appears in wins).
+const NFL_POS: Record<string, { pos: string; prio: number }> = {
+  passing: { pos: "QB", prio: 6 },
+  rushing: { pos: "RB", prio: 5 },
+  receiving: { pos: "WR", prio: 4 },
+  defensive: { pos: "DEF", prio: 3 },
+  interceptions: { pos: "DEF", prio: 3 },
+  kicking: { pos: "K", prio: 2 },
+  punting: { pos: "P", prio: 1 },
+};
+
 export function parseBoxscorePlayers(raw: unknown): ParsedPlayer[] {
   const teams = (raw as any)?.boxscore?.players;
   if (!Array.isArray(teams)) return [];
 
   const byId = new Map<string, ParsedPlayer>();
+  const posPrio = new Map<string, number>(); // for the NFL category-based inference
   for (const tb of teams) {
     const teamEspnId = tb?.team?.id != null ? String(tb.team.id) : null;
     for (const cat of Array.isArray(tb?.statistics) ? tb.statistics : []) {
+      const catName: string = cat?.name ?? "";
       const keys: string[] = Array.isArray(cat?.keys)
         ? cat.keys
         : Array.isArray(cat?.labels)
@@ -229,6 +243,14 @@ export function parseBoxscorePlayers(raw: unknown): ParsedPlayer[] {
             stats: {},
           };
           byId.set(id, entry);
+        }
+        // Infer NFL position from category when ESPN gave none.
+        if (!ath.position?.abbreviation && NFL_POS[catName]) {
+          const cand = NFL_POS[catName];
+          if (cand.prio > (posPrio.get(id) ?? 0)) {
+            entry.position = cand.pos;
+            posPrio.set(id, cand.prio);
+          }
         }
         const stats = Array.isArray(a?.stats) ? a.stats : [];
         for (let i = 0; i < keys.length; i++) {

@@ -6,6 +6,7 @@ import { buildTeamResolver } from "@/lib/espn/teams";
 import { matchRow, MatchResult, SeedRow } from "@/lib/matching";
 import { LeagueCode, fetchSummary } from "@/lib/espn/client";
 import { syncGamePlayers } from "@/lib/players";
+import { lookupVenueCoords } from "@/lib/venue-coords";
 
 export interface PreviewTeam {
   id: number;
@@ -159,6 +160,7 @@ export async function saveLoggedGame(
 
   let venueId: number | null = null;
   if (result.venue?.espnVenueId) {
+    const coords = lookupVenueCoords(result.venue.name); // so new stadiums get a map pin
     const v = await prisma.venue.upsert({
       where: { espnVenueId: result.venue.espnVenueId },
       create: {
@@ -166,6 +168,8 @@ export async function saveLoggedGame(
         name: result.venue.name ?? "Unknown venue",
         city: result.venue.city,
         state: result.venue.state,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
       },
       update: { name: result.venue.name ?? undefined, city: result.venue.city, state: result.venue.state },
     });
