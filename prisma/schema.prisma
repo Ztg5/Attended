@@ -32,8 +32,9 @@ model Team {
   primaryColor String? // hex, no leading '#'
   active       Boolean @default(true)
 
-  homeGames Game[] @relation("HomeTeam")
-  awayGames Game[] @relation("AwayTeam")
+  homeGames   Game[]       @relation("HomeTeam")
+  awayGames   Game[]       @relation("AwayTeam")
+  gamePlayers GamePlayer[]
 
   @@unique([leagueId, espnTeamId])
   @@index([leagueId])
@@ -84,7 +85,37 @@ model Game {
 
   createdAt DateTime @default(now())
 
+  gamePlayers GamePlayer[]
+
   @@index([leagueId])
   @@index([date])
   @@index([status])
+}
+
+// A person. Deduped on ESPN player id (never on name) so a traded player stays
+// one record across teams.
+model Player {
+  id           Int          @id @default(autoincrement())
+  espnPlayerId String       @unique
+  name         String
+  position     String?
+  headshotUrl  String?
+  gamePlayers  GamePlayer[]
+}
+
+// One player's appearance in one attended game. `stats` is a free-form JSON map of
+// ESPN box-score stat key -> numeric value (categories stored as-is; no fixed schema).
+model GamePlayer {
+  id       Int    @id @default(autoincrement())
+  game     Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId   Int
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId Int
+  team     Team?  @relation(fields: [teamId], references: [id])
+  teamId   Int?
+  stats    Json // { "passingYards": 287, "passingTouchdowns": 3 }
+
+  @@unique([gameId, playerId])
+  @@index([playerId])
+  @@index([gameId])
 }

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Trophy, Timer, MapPin, Users, BarChart3, Star } from "lucide-react";
+import { ArrowLeft, Trophy, Timer, MapPin, Users, BarChart3, Star, UsersRound } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { parseSummary, extractSummary, type LineScore, type TeamStats, type TeamLeaders } from "@/lib/summary";
+import { getGamePlayers, statLabel, type GamePlayerLine } from "@/lib/players";
 import { stateAbbr } from "@/lib/us-states";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TeamLogo } from "@/components/TeamLogo";
+import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +24,15 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
 
   const summary = extractSummary(g.detailsJson);
   const parsed = summary ? parseSummary(summary, g.league.code) : null;
+
+  // "Who you saw" reads the lean Player tables, not detailsJson.
+  const players = await getGamePlayers(gameId);
+  const awayPlayers = players
+    .filter((p) => p.teamId === g.awayTeamId)
+    .sort((a, b) => Object.keys(b.stats).length - Object.keys(a.stats).length);
+  const homePlayers = players
+    .filter((p) => p.teamId === g.homeTeamId)
+    .sort((a, b) => Object.keys(b.stats).length - Object.keys(a.stats).length);
 
   const date = g.date.toISOString().slice(0, 10);
   const homeWin = g.homeScore != null && g.awayScore != null && g.homeScore > g.awayScore;
@@ -92,6 +103,16 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
       {parsed?.lineScore && <LineScoreTable data={parsed.lineScore} />}
       {parsed?.teamStats && <TeamStatsTable data={parsed.teamStats} />}
       {parsed?.leaders && <LeadersBlock teams={parsed.leaders} />}
+
+      {players.length > 0 && (
+        <section>
+          <SectionHeading icon={<UsersRound size={15} />}>Who you saw</SectionHeading>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PlayerColumn abbr={g.awayTeam?.abbreviation ?? "AWAY"} players={awayPlayers} />
+            <PlayerColumn abbr={g.homeTeam?.abbreviation ?? "HOME"} players={homePlayers} />
+          </div>
+        </section>
+      )}
 
       {!parsed?.lineScore && !parsed?.teamStats && !parsed?.leaders && (
         <div className="mt-6 rounded-lg border border-border bg-surface px-5 py-8 text-center text-sm text-muted">
@@ -233,5 +254,42 @@ function LeadersBlock({ teams }: { teams: TeamLeaders[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+function PlayerColumn({ abbr, players }: { abbr: string; players: GamePlayerLine[] }) {
+  return (
+    <div className="rounded-lg border border-border bg-surface">
+      <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
+        {abbr}
+      </div>
+      <ul>
+        {players.map((p) => {
+          const entries = Object.entries(p.stats);
+          return (
+            <li key={p.playerId} className="flex items-start gap-2.5 border-b border-border px-4 py-2.5 last:border-0">
+              <PlayerHeadshot url={p.headshotUrl} name={p.name} size={30} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline gap-1.5">
+                  <Link href={`/players/${p.playerId}`} className="truncate text-sm font-medium hover:text-primary">
+                    {p.name}
+                  </Link>
+                  {p.position && <span className="shrink-0 text-xs text-faint">{p.position}</span>}
+                </div>
+                {entries.length > 0 && (
+                  <div className="mt-0.5 flex flex-wrap gap-x-2.5 gap-y-0.5 text-xs text-muted">
+                    {entries.map(([k, v]) => (
+                      <span key={k}>
+                        <span className="tnum font-medium text-ink">{v}</span> {statLabel(k)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

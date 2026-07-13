@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardCheck, ArrowRight, Flame, Trophy, Zap, Crosshair, Plane, PlusCircle, LayoutGrid } from "lucide-react";
+import { ClipboardCheck, ArrowRight, Flame, Trophy, Zap, Crosshair, Plane, PlusCircle, LayoutGrid, Users } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getDashboard, type GameLite } from "@/lib/stats";
 import { ButtonLink } from "@/components/Button";
@@ -42,6 +42,9 @@ export default async function Home() {
           )}
           <ButtonLink href="/collection" variant="secondary">
             <LayoutGrid size={15} /> Collection
+          </ButtonLink>
+          <ButtonLink href="/players" variant="secondary">
+            <Users size={15} /> Players
           </ButtonLink>
           <ButtonLink href="/log" variant="primary">
             <PlusCircle size={15} /> Log a game

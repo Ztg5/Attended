@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { buildTeamResolver } from "@/lib/espn/teams";
 import { matchRow, MatchResult, SeedRow } from "@/lib/matching";
-import { LeagueCode } from "@/lib/espn/client";
+import { LeagueCode, fetchSummary } from "@/lib/espn/client";
+import { syncGamePlayers } from "@/lib/players";
 
 export interface PreviewTeam {
   id: number;
@@ -175,6 +176,20 @@ export async function saveLoggedGame(
   const status = saveAsReview || !matched ? "needs_review" : result.event!.isFinal ? "final" : "pending";
   const dateOnly = result.matchedDate ?? date;
 
+  // Fetch the full summary (box score) so the detail view and player tracking work
+  // for newly-logged games, same as imported ones. Best-effort.
+  let summary: unknown = null;
+  if (result.event) {
+    try {
+      summary = await fetchSummary(leagueCode as LeagueCode, result.event.espnEventId);
+    } catch {
+      /* summary is optional; keep the scoreboard details */
+    }
+  }
+  const detailsJson = summary
+    ? { scoreboard: result.event?.details ?? null, summary }
+    : result.event?.details ?? undefined;
+
   const game = await prisma.game.create({
     data: {
       leagueId,
@@ -191,11 +206,20 @@ export async function saveLoggedGame(
       postseasonRound: result.postseasonRound,
       wentToOvertime: result.wentToOvertime,
       attendance: result.attendance,
-      detailsJson: (result.event?.details ?? undefined) as any,
+      detailsJson: detailsJson as any,
       notes: note.trim() || null,
       matchNote: matched ? result.reasons.join(" | ") || null : `logged unconfirmed: ${result.reasons.join("; ")}`,
     },
   });
+
+  // Extract players from the summary into Player/GamePlayer.
+  if (summary) {
+    try {
+      await syncGamePlayers(game.id, leagueId, summary);
+    } catch {
+      /* player extraction is best-effort */
+    }
+  }
 
   revalidatePath("/");
   revalidatePath("/games");

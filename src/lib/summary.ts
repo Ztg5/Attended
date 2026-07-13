@@ -175,6 +175,72 @@ export function parseSummary(raw: unknown, leagueCode: string): ParsedSummary {
   };
 }
 
+// --- box-score players ------------------------------------------------------
+
+export interface ParsedPlayer {
+  espnPlayerId: string;
+  name: string;
+  position: string | null;
+  headshotUrl: string | null;
+  teamEspnId: string | null;
+  stats: Record<string, number>; // ESPN stat key -> numeric value
+}
+
+const NUMERIC = /^-?(\d+\.?\d*|\.\d+)$/;
+function toNum(v: unknown): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (!NUMERIC.test(s)) return null; // skips "19/40", "8-17", "11:50", "", "-"
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Parse box-score players from a summary blob. One entry per athlete, with numeric
+ * stats merged across categories (a QB's passing + rushing, etc.). Non-numeric and
+ * compound values are dropped. Returns [] when there's no player data (thin old games).
+ */
+export function parseBoxscorePlayers(raw: unknown): ParsedPlayer[] {
+  const teams = (raw as any)?.boxscore?.players;
+  if (!Array.isArray(teams)) return [];
+
+  const byId = new Map<string, ParsedPlayer>();
+  for (const tb of teams) {
+    const teamEspnId = tb?.team?.id != null ? String(tb.team.id) : null;
+    for (const cat of Array.isArray(tb?.statistics) ? tb.statistics : []) {
+      const keys: string[] = Array.isArray(cat?.keys)
+        ? cat.keys
+        : Array.isArray(cat?.labels)
+        ? cat.labels
+        : [];
+      for (const a of Array.isArray(cat?.athletes) ? cat.athletes : []) {
+        const ath = a?.athlete;
+        const id = ath?.id != null ? String(ath.id) : null;
+        if (!id) continue;
+        let entry = byId.get(id);
+        if (!entry) {
+          entry = {
+            espnPlayerId: id,
+            name: ath.displayName ?? ath.shortName ?? "Unknown",
+            position: ath.position?.abbreviation ?? null,
+            headshotUrl: ath.headshot?.href ?? null,
+            teamEspnId,
+            stats: {},
+          };
+          byId.set(id, entry);
+        }
+        const stats = Array.isArray(a?.stats) ? a.stats : [];
+        for (let i = 0; i < keys.length; i++) {
+          const num = toNum(stats[i]);
+          if (num !== null) entry.stats[keys[i]] = num;
+        }
+      }
+    }
+  }
+  return [...byId.values()];
+}
+
 /** Pull the ESPN summary out of a stored detailsJson value, tolerating both shapes. */
 export function extractSummary(detailsJson: unknown): unknown {
   if (!detailsJson || typeof detailsJson !== "object") return null;
