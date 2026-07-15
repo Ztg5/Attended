@@ -12,6 +12,9 @@ next-env.d.ts
 # prisma
 /prisma/*.db
 
+# data exports
+*.xlsx
+
 # Claude Code local tooling (reinstallable; not part of the app)
 .claude/skills/
 .claude/settings.local.json

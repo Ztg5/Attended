@@ -13,14 +13,25 @@ Node 22. Fonts via `next/font/google` (self-hosted).
 ## Commands
 
 ```bash
-npm run dev            # dev server (localhost:3000)
-npm run import:dry     # match seed-games.csv against ESPN, print summary, NO db writes
-npm run import         # full import into Postgres (clears + rewrites the Game table)
-npm run db:push        # push prisma/schema.prisma to the database
-npx tsx --env-file=.env scripts/verify.ts   # sanity-check persisted data
+npm run dev                    # dev server (localhost:3000)
+npm run import:dry             # match seed-games.csv against ESPN, print summary, NO writes
+npm run import                 # full import into Postgres (clears + rewrites the Game table)
+npm run db:push                # push prisma/schema.prisma to the database
+npm run backfill:summaries -- --missing-only   # fetch ESPN box-score summaries into details_json
+npm run backfill:players       # parse players from stored details_json (no ESPN calls)
+npx tsx --env-file=.env scripts/backfill-venue-coords.ts   # set venue lat/long from the curated table
+npx tsx --env-file=.env scripts/verify.ts                  # sanity-check persisted data
 ```
 
 Env: `.env` holds Neon `DATABASE_URL` (pooled) + `DIRECT_URL` (non-pooled, for migrations).
+
+## Deployment
+
+Live on **Vercel**, auto-deploys on push to `main` (GitHub `Ztg5/Attended`). Set
+`DATABASE_URL` + `DIRECT_URL` in Vercel env vars. Pages that read the DB are
+`export const dynamic = "force-dynamic"` so builds never depend on the DB being reachable.
+`next.config.mjs` sets `images.unoptimized: true` — all images are already-optimized ESPN
+CDN assets, so this keeps Vercel Image-Optimization transformations at zero.
 
 ## Architecture
 
@@ -31,10 +42,21 @@ Env: `.env` holds Neon `DATABASE_URL` (pooled) + `DIRECT_URL` (non-pooled, for m
   schedule, claimed-result cross-check). Used by the import and the review re-run.
 - `scripts/import-games.ts` — one-time CSV import; prints matched/corrected/needs_review.
 - `src/app/review/` — UI to resolve flagged games (server actions: re-run / save / mark).
+- `src/lib/stats.ts` — dashboard stats. **Favorite teams are an explicit list**
+  (`FAVORITE_TEAMS`: Bills, Cavaliers, Guardians, Sabres); records/streaks are only for them.
+- `src/lib/summary.ts` — parses stored `details_json.summary` into box scores
+  (`parseSummary`) and box-score players (`parseBoxscorePlayers`, infers NFL position from
+  stat category since ESPN omits it). Never fetches.
+- `src/lib/players.ts` — player sync (`syncGamePlayers`) + lean read queries. Player/game
+  list queries **never select `details_json`** (egress rules); only the one-time backfills
+  and the game-detail box score read it.
+- `src/lib/venue-coords.ts` — curated venue lat/long (ESPN has none), matched by name.
+  Wired into the log flow so newly-logged stadiums get a map pin automatically.
 - Derived stats (records, teams seen, venues) are **computed in queries, never stored**.
 
-Data model: League · Team (stores ESPN id, colors, logo_url) · Venue (keyed by ESPN venue
-id — one venue despite name changes) · Game. Prisma schema is the source of truth.
+Data model: League · Team (ESPN id, colors, logo_url) · Venue (keyed by ESPN venue id) ·
+Game · **Player** (deduped on ESPN player id) · **GamePlayer** (player↔game, team +
+free-form numeric `stats` JSON). Prisma schema is the source of truth.
 
 ## Phase status
 
@@ -54,8 +76,19 @@ id — one venue despite name changes) · Game. Prisma schema is the source of t
   list. Queries in `src/lib/collection.ts`. Venue coords curated in
   `scripts/backfill-venue-coords.ts` (ESPN exposes no lat/long).
 
-All four phases complete. Routes: `/` dashboard · `/games` log · `/log` add · `/review`
-· `/collection`.
+All four phases complete, plus post-plan features:
+
+- **Game detail** (`/games/[id]`) — line score, team stats, game leaders (renders only
+  sections present in the data), and a "Who you saw" player list. Parser in `summary.ts`.
+- **Player tracking** — `/players` (searchable/sortable grid, filter by league then position,
+  headshots, times-seen) and `/players/[id]` (games seen, career totals excluding rate/max
+  stats, team record, "stats available for X of Y" note). Log flow extracts players
+  automatically; `scripts/backfill-players.ts` backfilled the rest from `details_json`.
+- **Deployed** to Vercel (see Deployment above). OKLCH color tokens have an `@supports`
+  hex fallback in `globals.css` for older browsers.
+
+Routes: `/` dashboard · `/games` log · `/games/[id]` box score · `/log` add · `/review`
+· `/collection` · `/players` · `/players/[id]`.
 
 ## Design Context
 
