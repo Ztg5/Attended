@@ -149,16 +149,30 @@ export async function fetchTeamSchedule(
   return events.map((e: any) => normalizeEvent(league, e));
 }
 
-/** Same as fetchTeamSchedule, but cached for 24h — for the /schedule batch-add page. */
+/**
+ * A team's full season for the /schedule batch-add page (cached 24h): regular season
+ * (seasontype=2) AND postseason (seasontype=3), since ESPN returns only the regular
+ * season by default. Merged, deduped by event id, sorted by date.
+ */
 export async function fetchTeamScheduleCached(
   league: LeagueCode,
   espnTeamId: string,
   season: number
 ): Promise<EspnEvent[]> {
-  const url = `${SITE_BASE}/${LEAGUE_PATH[league]}/teams/${espnTeamId}/schedule?season=${season}`;
-  const json = await getJson(url, { next: { revalidate: 86400 } });
-  const events = json?.events ?? [];
-  return events.map((e: any) => normalizeEvent(league, e));
+  const fetchType = async (seasontype: 2 | 3): Promise<EspnEvent[]> => {
+    const url = `${SITE_BASE}/${LEAGUE_PATH[league]}/teams/${espnTeamId}/schedule?season=${season}&seasontype=${seasontype}`;
+    try {
+      const json = await getJson(url, { next: { revalidate: 86400 } });
+      return (json?.events ?? []).map((e: any) => normalizeEvent(league, e));
+    } catch {
+      return []; // a missing postseason (team didn't make it) is expected
+    }
+  };
+
+  const [regular, postseason] = await Promise.all([fetchType(2), fetchType(3)]);
+  const byId = new Map<string, EspnEvent>();
+  for (const e of [...regular, ...postseason]) byId.set(e.espnEventId, e);
+  return [...byId.values()].sort((a, b) => (a.dateIso ?? "").localeCompare(b.dateIso ?? ""));
 }
 
 /** Event summary — richer per-game detail (line scores, weather, broadcast). */
@@ -185,7 +199,10 @@ function parseScore(raw: any): number | null {
 
 function normalizeEvent(league: LeagueCode, e: any): EspnEvent {
   const comp = e.competitions?.[0] ?? {};
-  const seasonType = e.season?.type ?? comp.type?.id ?? 2;
+  // The scoreboard endpoint marks the season type on e.season.type (a number); the
+  // team-schedule endpoint marks it on e.seasonType ({ type: 3, name: "Postseason" }).
+  // comp.type is the GAME format ("Standard"), not the season type — don't use it here.
+  const seasonType = e.season?.type ?? e.seasonType?.type ?? e.seasonType?.id ?? 2;
   const statusType = comp.status?.type ?? e.status?.type ?? {};
   const period = comp.status?.period ?? e.status?.period ?? 0;
 

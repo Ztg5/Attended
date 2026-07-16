@@ -11,8 +11,9 @@ import type { ScheduleTeamOpt } from "./page";
 const LEAGUES = ["NFL", "MLB", "NBA", "NHL"] as const;
 
 function seasonOptions(): number[] {
-  const y = new Date().getFullYear();
-  return Array.from({ length: 11 }, (_, i) => y + 1 - i);
+  const max = new Date().getFullYear() + 1; // include the upcoming season
+  const min = 2010;
+  return Array.from({ length: max - min + 1 }, (_, i) => max - i);
 }
 
 export function ScheduleForm({ teamsByLeague }: { teamsByLeague: Record<string, ScheduleTeamOpt[]> }) {
