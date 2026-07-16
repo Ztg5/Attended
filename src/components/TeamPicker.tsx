@@ -97,7 +97,8 @@ export function TeamPicker({
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search…"
-                className="h-9 w-full rounded border border-border bg-bg px-2.5 text-sm outline-none focus:border-primary"
+                /* text-base (16px) so iOS Safari doesn't auto-zoom on focus */
+                className="h-9 w-full rounded border border-border bg-bg px-2.5 text-base outline-none focus:border-primary"
               />
             </div>
             {filtered.length ? (

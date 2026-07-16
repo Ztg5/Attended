@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { ArrowLeft, Check, ListChecks, PlusCircle, Trophy } from "lucide-react";
 import { TeamPicker } from "@/components/TeamPicker";
 import { TeamLogo } from "@/components/TeamLogo";
@@ -26,6 +26,12 @@ export function ScheduleForm({ teamsByLeague }: { teamsByLeague: Record<string, 
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ added: number; skipped: number; message: string } | null>(null);
   const [pending, start] = useTransition();
+
+  // The schedule list can leave the page scrolled far down; when we switch to the
+  // success screen or load a new schedule, jump back to the top.
+  useEffect(() => {
+    if (result || schedule) window.scrollTo({ top: 0 });
+  }, [result, schedule]);
 
   const teams = teamsByLeague[league] ?? [];
   const team = teams.find((t) => t.id === teamId) ?? null;

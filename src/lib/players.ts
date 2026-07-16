@@ -73,6 +73,30 @@ export interface PlayerListItem {
   leagueCode: string | null;
 }
 
+const TACKLE_KEYS = new Set(["totalTackles", "soloTackles", "assistTackles"]);
+
+/**
+ * True for players whose entire attended-game history is noise: no recorded stats at all
+ * (a DNP/roster line) or nothing but a lone tackle (e.g. an offensive lineman credited
+ * with a single tackle). Anyone with a non-tackle stat, or 2+ tackles, is kept.
+ */
+function isNoisePlayer(games: { stats: unknown }[]): boolean {
+  let sawStat = false;
+  let sawNonTackle = false;
+  let maxTackle = 0;
+  for (const g of games) {
+    const stats = (g.stats ?? {}) as Record<string, number>;
+    for (const [k, v] of Object.entries(stats)) {
+      if (typeof v !== "number" || v === 0) continue;
+      sawStat = true;
+      if (TACKLE_KEYS.has(k)) maxTackle = Math.max(maxTackle, Math.abs(v));
+      else sawNonTackle = true;
+    }
+  }
+  if (!sawStat) return true; // never recorded anything
+  return !sawNonTackle && maxTackle <= 1; // only a single tackle
+}
+
 export async function getPlayersList(userId: string): Promise<PlayerListItem[]> {
   // Players seen = players who appeared in a game THIS user attended. Player rows are
   // global, but both the filter and the times-seen count run through the user's games.
@@ -84,22 +108,21 @@ export async function getPlayersList(userId: string): Promise<PlayerListItem[]> 
       name: true,
       position: true,
       headshotUrl: true,
-      _count: { select: { gamePlayers: { where: attendedGame } } },
-      // one attended game is enough to know the player's league (a player is one sport)
+      // stats power the noise filter; league (a player is one sport) comes from any game.
       gamePlayers: {
         where: attendedGame,
-        take: 1,
-        select: { game: { select: { league: { select: { code: true } } } } },
+        select: { stats: true, game: { select: { league: { select: { code: true } } } } },
       },
     },
   });
   return players
+    .filter((p) => !isNoisePlayer(p.gamePlayers))
     .map((p) => ({
       id: p.id,
       name: p.name,
       position: p.position,
       headshotUrl: p.headshotUrl,
-      timesSeen: p._count.gamePlayers,
+      timesSeen: p.gamePlayers.length,
       leagueCode: p.gamePlayers[0]?.game.league.code ?? null,
     }))
     .sort((a, b) => b.timesSeen - a.timesSeen || a.name.localeCompare(b.name));
