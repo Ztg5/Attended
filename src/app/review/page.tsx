@@ -10,11 +10,24 @@ export default async function ReviewPage() {
   const userId = await requireUserId();
   const games = await prisma.game.findMany({
     where: { status: "needs_review", attendances: { some: { userId } } },
-    include: {
-      league: true,
-      homeTeam: true,
-      awayTeam: true,
-      venue: true,
+    // select (not include) so the heavy detailsJson blob is never pulled here.
+    select: {
+      id: true,
+      leagueId: true,
+      seasonYear: true,
+      date: true,
+      homeTeamId: true,
+      awayTeamId: true,
+      homeScore: true,
+      awayScore: true,
+      status: true,
+      matchNote: true,
+      claimedResult: true,
+      isPostseason: true,
+      postseasonRound: true,
+      attendance: true,
+      league: { select: { code: true } },
+      venue: { select: { name: true } },
       attendances: { where: { userId }, select: { notes: true } },
     },
     orderBy: { date: "desc" },

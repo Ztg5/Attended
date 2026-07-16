@@ -263,7 +263,14 @@ export async function refreshPending(): Promise<{ ok: boolean; updated: number; 
   const userId = await requireUserId();
   const pending = await prisma.game.findMany({
     where: { status: "pending", attendances: { some: { userId } } },
-    include: { league: true, homeTeam: true, awayTeam: true },
+    // select (not include) so detailsJson isn't pulled — we only need the matchup keys.
+    select: {
+      id: true,
+      date: true,
+      league: { select: { code: true } },
+      homeTeam: { select: { nickname: true } },
+      awayTeam: { select: { nickname: true } },
+    },
   });
   let updated = 0;
   for (const g of pending) {
