@@ -1,16 +1,43 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { GameRow } from "@/components/GameRow";
+import { Button } from "@/components/Button";
 import type { GameLite } from "@/lib/stats";
 
 type SortKey = "date-desc" | "date-asc";
+
+/** RFC-4180 CSV cell: quote when it contains a comma, quote, or newline. */
+function csvCell(value: string | number | null): string {
+  const s = String(value ?? "");
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
 export function GameLog({ games, leagues }: { games: GameLite[]; leagues: string[] }) {
   const [league, setLeague] = useState<string>("ALL");
   const [sort, setSort] = useState<SortKey>("date-desc");
   const [q, setQ] = useState("");
+
+  /** Download every attended game (date, home + score, away + score) as a CSV Excel opens. */
+  function exportCsv() {
+    const header = ["Date", "Home Team", "Home Score", "Away Team", "Away Score"];
+    const rows = [...games]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((g) => [g.date, g.home?.name ?? "", g.homeScore ?? "", g.away?.name ?? "", g.awayScore ?? ""]);
+    const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\r\n");
+
+    // Prepend a UTF-8 BOM so Excel reads accented team names correctly.
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "attended-games.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -72,6 +99,10 @@ export function GameLog({ games, leagues }: { games: GameLite[]; leagues: string
           <option value="date-desc">Newest first</option>
           <option value="date-asc">Oldest first</option>
         </select>
+
+        <Button variant="secondary" size="sm" onClick={exportCsv} disabled={games.length === 0} title="Download all your games as a spreadsheet">
+          <Download size={15} /> Export
+        </Button>
       </div>
 
       <div className="mb-2 text-xs text-muted">
