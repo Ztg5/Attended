@@ -91,8 +91,9 @@ export function TeamPicker({
             role="listbox"
           >
             <div className="sticky top-0 border-b border-border bg-surface p-2">
+              {/* No autoFocus: on mobile that pops the keyboard on open. Focus (and the
+                  keyboard) should only appear once the user taps into the search field. */}
               <input
-                autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search…"
