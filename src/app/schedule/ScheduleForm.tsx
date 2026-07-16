@@ -12,7 +12,7 @@ const LEAGUES = ["NFL", "MLB", "NBA", "NHL"] as const;
 
 function seasonOptions(): number[] {
   const max = new Date().getFullYear() + 1; // include the upcoming season
-  const min = 2010;
+  const min = 2000;
   return Array.from({ length: max - min + 1 }, (_, i) => max - i);
 }
 
