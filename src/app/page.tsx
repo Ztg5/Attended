@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ClipboardCheck, ArrowRight, Flame, Trophy, Zap, Crosshair, Plane, PlusCircle, LayoutGrid, Users } from "lucide-react";
+import { ClipboardCheck, ArrowRight, Flame, Trophy, Zap, Crosshair, Plane, PlusCircle, LayoutGrid, Users, UserRound } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getDashboard, type GameLite } from "@/lib/stats";
+import { requireUserId } from "@/lib/session";
 import { ButtonLink } from "@/components/Button";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserMenu } from "@/components/UserMenu";
 import { TeamLogo } from "@/components/TeamLogo";
 import { GameLine } from "@/components/GameLine";
 import { GameRow } from "@/components/GameRow";
@@ -14,10 +15,12 @@ import { PendingRefresh } from "@/components/PendingRefresh";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [d, needsReview, pendingCount] = await Promise.all([
-    getDashboard(),
-    prisma.game.count({ where: { status: "needs_review" } }),
-    prisma.game.count({ where: { status: "pending" } }),
+  const userId = await requireUserId();
+  const [d, needsReview, pendingCount, friendRequests] = await Promise.all([
+    getDashboard(userId),
+    prisma.game.count({ where: { status: "needs_review", attendances: { some: { userId } } } }),
+    prisma.game.count({ where: { status: "pending", attendances: { some: { userId } } } }),
+    prisma.friendship.count({ where: { addresseeId: userId, status: "pending" } }),
   ]);
 
   const rec = (w: number, l: number, t: number) => (t > 0 ? `${w}–${l}–${t}` : `${w}–${l}`);
@@ -46,10 +49,18 @@ export default async function Home() {
           <ButtonLink href="/players" variant="secondary">
             <Users size={15} /> Players
           </ButtonLink>
+          <ButtonLink href="/people" variant="secondary">
+            <UserRound size={15} /> People
+            {friendRequests > 0 && (
+              <span className="tnum ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--primary)", color: "var(--on-primary)" }}>
+                {friendRequests}
+              </span>
+            )}
+          </ButtonLink>
           <ButtonLink href="/log" variant="primary">
             <PlusCircle size={15} /> Log a game
           </ButtonLink>
-          <ThemeToggle />
+          <UserMenu />
         </div>
       </div>
 
@@ -74,20 +85,37 @@ export default async function Home() {
       </p>
 
       {/* Followed teams */}
-      <Section title="By team" hint="Your record with your teams">
-        <div className="divide-y divide-border rounded-lg border border-border bg-surface">
-          {d.followed.map((f) => (
-            <div key={f.team.id} className="flex items-center gap-3 px-4 py-3">
-              <TeamLogo url={f.team.logoUrl} alt={f.team.name} size={30} />
-              <span className="font-medium">{f.team.name}</span>
-              <span className="ml-auto flex items-baseline gap-3">
-                <span className="tnum text-lg font-semibold">{rec(f.wins, f.losses, f.ties)}</span>
-                <span className="tnum w-12 text-right text-sm text-muted">{pct(f.wins, f.losses)}%</span>
-                <span className="tnum w-16 text-right text-xs text-faint">{f.games} games</span>
-              </span>
-            </div>
-          ))}
-        </div>
+      <Section
+        title="By team"
+        hint="Your record with your teams"
+        action={
+          <Link href="/choose-teams" className="text-sm text-primary hover:text-primary-hover">
+            Edit
+          </Link>
+        }
+      >
+        {d.followed.length > 0 ? (
+          <div className="divide-y divide-border rounded-lg border border-border bg-surface">
+            {d.followed.map((f) => (
+              <div key={f.team.id} className="flex items-center gap-3 px-4 py-3">
+                <TeamLogo url={f.team.logoUrl} alt={f.team.name} size={30} />
+                <span className="font-medium">{f.team.name}</span>
+                <span className="ml-auto flex items-baseline gap-3">
+                  <span className="tnum text-lg font-semibold">{rec(f.wins, f.losses, f.ties)}</span>
+                  <span className="tnum w-12 text-right text-sm text-muted">{pct(f.wins, f.losses)}%</span>
+                  <span className="tnum w-16 text-right text-xs text-faint">{f.games} games</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Link
+            href="/choose-teams"
+            className="block rounded-lg border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted transition-colors hover:bg-surface-2"
+          >
+            Pick your favorite teams to track your record with them →
+          </Link>
+        )}
       </Section>
 
       {/* Personal records */}

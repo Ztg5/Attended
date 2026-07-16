@@ -73,16 +73,24 @@ export interface PlayerListItem {
   leagueCode: string | null;
 }
 
-export async function getPlayersList(): Promise<PlayerListItem[]> {
+export async function getPlayersList(userId: string): Promise<PlayerListItem[]> {
+  // Players seen = players who appeared in a game THIS user attended. Player rows are
+  // global, but both the filter and the times-seen count run through the user's games.
+  const attendedGame = { game: { attendances: { some: { userId } } } };
   const players = await prisma.player.findMany({
+    where: { gamePlayers: { some: attendedGame } },
     select: {
       id: true,
       name: true,
       position: true,
       headshotUrl: true,
-      _count: { select: { gamePlayers: true } },
-      // one game is enough to know the player's league (a player is one sport)
-      gamePlayers: { take: 1, select: { game: { select: { league: { select: { code: true } } } } } },
+      _count: { select: { gamePlayers: { where: attendedGame } } },
+      // one attended game is enough to know the player's league (a player is one sport)
+      gamePlayers: {
+        where: attendedGame,
+        take: 1,
+        select: { game: { select: { league: { select: { code: true } } } } },
+      },
     },
   });
   return players
@@ -123,15 +131,16 @@ export interface PlayerDetail {
   totalGames: number; // games seen (Y)
 }
 
-export async function getPlayerDetail(playerId: number): Promise<PlayerDetail | null> {
+export async function getPlayerDetail(playerId: number, userId: string): Promise<PlayerDetail | null> {
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     select: { id: true, name: true, position: true, headshotUrl: true },
   });
   if (!player) return null;
 
+  // Only appearances in games this user attended — totals/record/games are all personal.
   const rows = await prisma.gamePlayer.findMany({
-    where: { playerId },
+    where: { playerId, game: { attendances: { some: { userId } } } },
     select: {
       teamId: true,
       stats: true,
@@ -151,6 +160,8 @@ export async function getPlayerDetail(playerId: number): Promise<PlayerDetail | 
     },
     orderBy: { game: { date: "desc" } },
   });
+  // The user hasn't seen this player in any attended game — treat as not found.
+  if (rows.length === 0) return null;
 
   const totals = new Map<string, number>();
   let wins = 0;
@@ -255,6 +266,44 @@ const LABELS: Record<string, string> = {
   goals: "G", shotsTotal: "SOG", blockedShots: "BS", penaltyMinutes: "PIM",
   takeaways: "TK", giveaways: "GV", shifts: "SHFT", saves: "SV",
 };
+
+// The handful of stats worth showing per game, in priority order per league — the
+// "fantasy box line" for each sport. Batters/pitchers (MLB) and each football position
+// carry disjoint keys, so one ordered list naturally resolves to the right few.
+const HEADLINE_KEYS: Record<string, string[]> = {
+  NFL: [
+    "passingYards", "passingTouchdowns", "interceptions",
+    "rushingYards", "rushingTouchdowns",
+    "receptions", "receivingYards", "receivingTouchdowns",
+    "sacks", "totalTackles",
+  ],
+  NBA: ["points", "rebounds", "assists", "steals", "blocks"],
+  MLB: [
+    "hits", "homeRuns", "RBIs", "runs", "stolenBases",
+    "inningsPitched", "strikeouts", "earnedRuns", "walks",
+  ],
+  NHL: ["goals", "assists", "points", "shotsTotal", "saves"],
+};
+const MAX_HEADLINE = 4;
+
+/**
+ * The most relevant stats for one player-game, capped and ordered like a fantasy line.
+ * Falls back to whatever stats exist (capped) for leagues without a curated list.
+ */
+export function headlineStats(
+  leagueCode: string,
+  stats: Record<string, number>
+): [string, number][] {
+  const priority = HEADLINE_KEYS[leagueCode];
+  const picked: [string, number][] = [];
+  if (priority) {
+    for (const k of priority) {
+      if (k in stats && picked.length < MAX_HEADLINE) picked.push([k, stats[k]]);
+    }
+  }
+  if (picked.length === 0) return Object.entries(stats).slice(0, MAX_HEADLINE);
+  return picked;
+}
 
 /** Short display label for an ESPN stat key. */
 export function statLabel(key: string): string {

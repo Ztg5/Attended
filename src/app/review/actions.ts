@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { requireUserId } from "@/lib/session";
 import { buildTeamResolver } from "@/lib/espn/teams";
 import { matchRow, SeedRow } from "@/lib/matching";
 import { LeagueCode } from "@/lib/espn/client";
@@ -13,9 +14,15 @@ export interface ActionResult {
 
 /** Re-run the ESPN match for a flagged game and refresh its data in place. */
 export async function rerunMatch(gameId: number): Promise<ActionResult> {
+  const userId = await requireUserId();
   const game = await prisma.game.findUnique({
     where: { id: gameId },
-    include: { league: true, homeTeam: true, awayTeam: true },
+    include: {
+      league: true,
+      homeTeam: true,
+      awayTeam: true,
+      attendances: { where: { userId }, select: { notes: true } },
+    },
   });
   if (!game || !game.homeTeam || !game.awayTeam) {
     return { ok: false, message: "Can't re-run — the game is missing its teams." };
@@ -29,7 +36,7 @@ export async function rerunMatch(gameId: number): Promise<ActionResult> {
     awayTeam: game.awayTeam.nickname,
     venueOverride: null,
     claimedResult: game.claimedResult,
-    notes: game.notes,
+    notes: game.attendances[0]?.notes ?? null, // only used as a season-year hint
     needsReview: false, // we want an honest fresh verdict
   };
 
@@ -111,8 +118,9 @@ export interface SaveInput {
   notes: string;
 }
 
-/** Persist manual edits from the review form. */
+/** Persist manual edits from the review form. Game fields are shared; note is personal. */
 export async function saveGame(gameId: number, data: SaveInput): Promise<ActionResult> {
+  const userId = await requireUserId();
   await prisma.game.update({
     where: { id: gameId },
     data: {
@@ -122,8 +130,12 @@ export async function saveGame(gameId: number, data: SaveInput): Promise<ActionR
       homeScore: data.homeScore === "" ? null : Number(data.homeScore),
       awayScore: data.awayScore === "" ? null : Number(data.awayScore),
       status: data.status,
-      notes: data.notes.trim() || null,
     },
+  });
+  await prisma.attendance.upsert({
+    where: { userId_gameId: { userId, gameId } },
+    create: { userId, gameId, notes: data.notes.trim() || null },
+    update: { notes: data.notes.trim() || null },
   });
   revalidatePath("/review");
   revalidatePath("/");
@@ -133,6 +145,7 @@ export async function saveGame(gameId: number, data: SaveInput): Promise<ActionR
 
 /** Clear a game out of review — mark it final. */
 export async function markReviewed(gameId: number): Promise<ActionResult> {
+  await requireUserId();
   await prisma.game.update({ where: { id: gameId }, data: { status: "final" } });
   revalidatePath("/review");
   revalidatePath("/");

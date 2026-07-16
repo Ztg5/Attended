@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { requireUserId } from "@/lib/session";
 import { buildTeamResolver } from "@/lib/espn/teams";
 import { matchRow, MatchResult, SeedRow } from "@/lib/matching";
 import { LeagueCode, fetchSummary } from "@/lib/espn/client";
@@ -45,14 +46,14 @@ function bothLeagueTeams(leagueId: number) {
 async function runMatch(
   leagueCode: LeagueCode,
   homeNick: string,
-  awayNick: string,
-  date: string
+  date: string,
+  awayNick: string | null = null
 ): Promise<MatchResult> {
   const row: SeedRow = {
     league: leagueCode,
     date,
     homeTeam: homeNick,
-    awayTeam: awayNick,
+    awayTeam: awayNick, // null → match on the home team alone
     venueOverride: null,
     claimedResult: null,
     notes: null,
@@ -62,20 +63,17 @@ async function runMatch(
   return matchRow(row, resolver);
 }
 
-/** Match-and-confirm preview — no database writes. */
+/** Match-and-confirm preview — no database writes. Only the home team + date are needed. */
 export async function previewMatch(
   leagueCode: string,
   homeTeamId: number,
-  awayTeamId: number,
   date: string
 ): Promise<PreviewResult> {
-  const [home, away] = await Promise.all([
-    prisma.team.findUnique({ where: { id: homeTeamId } }),
-    prisma.team.findUnique({ where: { id: awayTeamId } }),
-  ]);
-  if (!home || !away) return { verdict: "no_match", reasons: ["Teams not found."], match: null, duplicateGameId: null };
+  const userId = await requireUserId();
+  const home = await prisma.team.findUnique({ where: { id: homeTeamId } });
+  if (!home) return { verdict: "no_match", reasons: ["Team not found."], match: null, duplicateGameId: null };
 
-  const result = await runMatch(leagueCode as LeagueCode, home.nickname, away.nickname, date);
+  const result = await runMatch(leagueCode as LeagueCode, home.nickname, date);
 
   if (!result.event) {
     return { verdict: "no_match", reasons: result.reasons, match: null, duplicateGameId: null };
@@ -92,7 +90,13 @@ export async function previewMatch(
     teamByEspn(result.awayTeamEspnId),
   ]);
 
-  const dup = await prisma.game.findUnique({ where: { espnEventId: result.event.espnEventId } });
+  // A "duplicate" now means THIS user already logged the game — the game row itself
+  // is global and shared, so another user having it is fine (they'd just add attendance).
+  const existing = await prisma.game.findUnique({
+    where: { espnEventId: result.event.espnEventId },
+    select: { id: true, attendances: { where: { userId }, select: { id: true } } },
+  });
+  const dup = existing && existing.attendances.length > 0 ? { id: existing.id } : null;
 
   const toPreviewTeam = (t: typeof home | null): PreviewTeam | null =>
     t ? { id: t.id, nickname: t.nickname, name: t.name, abbreviation: t.abbreviation, logoUrl: t.logoUrl } : null;
@@ -131,24 +135,35 @@ export interface SaveResult {
 export async function saveLoggedGame(
   leagueCode: string,
   homeTeamId: number,
-  awayTeamId: number,
   date: string,
   note: string,
   saveAsReview: boolean
 ): Promise<SaveResult> {
-  const [home, away, league] = await Promise.all([
+  const userId = await requireUserId();
+  const [home, league] = await Promise.all([
     prisma.team.findUnique({ where: { id: homeTeamId } }),
-    prisma.team.findUnique({ where: { id: awayTeamId } }),
     prisma.league.findFirst({ where: { code: leagueCode } }),
   ]);
-  if (!home || !away || !league) return { ok: false, message: "Teams or league not found." };
+  if (!home || !league) return { ok: false, message: "Team or league not found." };
 
-  const result = await runMatch(leagueCode as LeagueCode, home.nickname, away.nickname, date);
+  const result = await runMatch(leagueCode as LeagueCode, home.nickname, date);
+  const noteVal = note.trim() || null;
 
-  // Duplicate guard.
+  // If this real-world game already exists (someone logged it, or you did), don't
+  // re-fetch it — just attach THIS user's attendance. Games are global and shared.
   if (result.event) {
-    const dup = await prisma.game.findUnique({ where: { espnEventId: result.event.espnEventId } });
-    if (dup) return { ok: false, message: "You've already logged this game.", gameId: dup.id };
+    const existing = await prisma.game.findUnique({
+      where: { espnEventId: result.event.espnEventId },
+      select: { id: true, attendances: { where: { userId }, select: { id: true } } },
+    });
+    if (existing) {
+      if (existing.attendances.length > 0)
+        return { ok: false, message: "You've already logged this game.", gameId: existing.id };
+      await prisma.attendance.create({ data: { userId, gameId: existing.id, notes: noteVal } });
+      revalidatePath("/");
+      revalidatePath("/games");
+      return { ok: true, gameId: existing.id, message: "Added to your log." };
+    }
   }
 
   const leagueId = league.id;
@@ -199,8 +214,9 @@ export async function saveLoggedGame(
       leagueId,
       date: new Date(`${dateOnly}T00:00:00Z`),
       seasonYear: result.seasonYear,
+      // On a match both teams come from ESPN; unmatched saves keep only the picked team.
       homeTeamId: matched ? await teamId(result.homeTeamEspnId, homeTeamId) : homeTeamId,
-      awayTeamId: matched ? await teamId(result.awayTeamEspnId, awayTeamId) : awayTeamId,
+      awayTeamId: matched ? await teamId(result.awayTeamEspnId, homeTeamId) : null,
       venueId,
       homeScore: result.homeScore,
       awayScore: result.awayScore,
@@ -211,12 +227,14 @@ export async function saveLoggedGame(
       wentToOvertime: result.wentToOvertime,
       attendance: result.attendance,
       detailsJson: detailsJson as any,
-      notes: note.trim() || null,
       matchNote: matched ? result.reasons.join(" | ") || null : `logged unconfirmed: ${result.reasons.join("; ")}`,
     },
   });
 
-  // Extract players from the summary into Player/GamePlayer.
+  // Attach this user's attendance (personal note lives here, not on the shared game).
+  await prisma.attendance.create({ data: { userId, gameId: game.id, notes: noteVal } });
+
+  // Extract players from the summary into Player/GamePlayer (global tables).
   if (summary) {
     try {
       await syncGamePlayers(game.id, leagueId, summary);
@@ -242,8 +260,9 @@ export async function saveLoggedGame(
 
 /** Re-fetch every pending game and finalize any that are now complete. */
 export async function refreshPending(): Promise<{ ok: boolean; updated: number; message: string }> {
+  const userId = await requireUserId();
   const pending = await prisma.game.findMany({
-    where: { status: "pending" },
+    where: { status: "pending", attendances: { some: { userId } } },
     include: { league: true, homeTeam: true, awayTeam: true },
   });
   let updated = 0;
@@ -252,8 +271,8 @@ export async function refreshPending(): Promise<{ ok: boolean; updated: number; 
     const result = await runMatch(
       g.league.code as LeagueCode,
       g.homeTeam.nickname,
-      g.awayTeam.nickname,
-      g.date.toISOString().slice(0, 10)
+      g.date.toISOString().slice(0, 10),
+      g.awayTeam.nickname
     );
     if (result.event?.isFinal) {
       await prisma.game.update({
@@ -287,8 +306,12 @@ export interface UpdateInput {
   notes: string;
 }
 
-/** Edit an existing game's core fields (from the game log manage view). */
+/**
+ * Edit from the game-log manage view. Score/date/status are shared game data; the
+ * note is personal and upserted onto the user's Attendance row.
+ */
 export async function updateGame(gameId: number, data: UpdateInput): Promise<{ ok: boolean; message: string }> {
+  const userId = await requireUserId();
   await prisma.game.update({
     where: { id: gameId },
     data: {
@@ -296,8 +319,12 @@ export async function updateGame(gameId: number, data: UpdateInput): Promise<{ o
       homeScore: data.homeScore === "" ? null : Number(data.homeScore),
       awayScore: data.awayScore === "" ? null : Number(data.awayScore),
       status: data.status,
-      notes: data.notes.trim() || null,
     },
+  });
+  await prisma.attendance.upsert({
+    where: { userId_gameId: { userId, gameId } },
+    create: { userId, gameId, notes: data.notes.trim() || null },
+    update: { notes: data.notes.trim() || null },
   });
   revalidatePath("/");
   revalidatePath("/games");
@@ -305,9 +332,50 @@ export async function updateGame(gameId: number, data: UpdateInput): Promise<{ o
   return { ok: true, message: "Saved." };
 }
 
-/** Delete a game entirely. */
+export interface FavoriteResult {
+  ok: boolean;
+  favorited: boolean;
+  message: string;
+}
+
+const MAX_FAVORITES = 4;
+
+/**
+ * Toggle a game as one of the user's favorites (capped at MAX_FAVORITES). Only games the
+ * user attended can be favorited — the flag lives on their Attendance row.
+ */
+export async function toggleFavorite(gameId: number): Promise<FavoriteResult> {
+  const userId = await requireUserId();
+  const att = await prisma.attendance.findUnique({
+    where: { userId_gameId: { userId, gameId } },
+    select: { id: true, favoritedAt: true },
+  });
+  if (!att) return { ok: false, favorited: false, message: "Log this game before favoriting it." };
+
+  if (att.favoritedAt) {
+    await prisma.attendance.update({ where: { id: att.id }, data: { favoritedAt: null } });
+    revalidatePath("/");
+    revalidatePath(`/games/${gameId}`);
+    return { ok: true, favorited: false, message: "Removed from favorites." };
+  }
+
+  const count = await prisma.attendance.count({ where: { userId, favoritedAt: { not: null } } });
+  if (count >= MAX_FAVORITES) {
+    return { ok: false, favorited: false, message: `You can only favorite ${MAX_FAVORITES} games.` };
+  }
+  await prisma.attendance.update({ where: { id: att.id }, data: { favoritedAt: new Date() } });
+  revalidatePath("/");
+  revalidatePath(`/games/${gameId}`);
+  return { ok: true, favorited: true, message: "Added to favorites." };
+}
+
+/**
+ * Remove the game from THIS user's log (delete their Attendance). The global game row
+ * is left intact — other users may have attended it, and it's the shared catalog.
+ */
 export async function deleteGame(gameId: number): Promise<{ ok: boolean }> {
-  await prisma.game.delete({ where: { id: gameId } });
+  const userId = await requireUserId();
+  await prisma.attendance.deleteMany({ where: { userId, gameId } });
   revalidatePath("/");
   revalidatePath("/games");
   revalidatePath("/review");

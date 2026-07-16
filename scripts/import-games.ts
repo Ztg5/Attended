@@ -80,6 +80,23 @@ async function persist(results: MatchResult[], resolver: TeamResolver) {
   console.log("Clearing existing games for a clean import...");
   await prisma.game.deleteMany({});
 
+  // Multi-user: notes belong to a user's Attendance, not the Game. If OWNER_EMAIL is
+  // set, the owner gets an Attendance row (carrying the CSV note) for every game.
+  const ownerEmail = process.env.OWNER_EMAIL?.trim() || null;
+  let ownerId: string | null = null;
+  if (ownerEmail) {
+    const owner = await prisma.user.upsert({
+      where: { email: ownerEmail },
+      create: { email: ownerEmail },
+      update: {},
+      select: { id: true },
+    });
+    ownerId = owner.id;
+    console.log(`Attaching attendance to owner <${ownerEmail}>.`);
+  } else {
+    console.log("OWNER_EMAIL not set — seeding global games only (no attendance/notes).");
+  }
+
   let written = 0;
   for (const r of results) {
     const leagueId = leagueIdByCode.get(r.row.league)!;
@@ -126,7 +143,7 @@ async function persist(results: MatchResult[], resolver: TeamResolver) {
       r.row.date ??
       (r.event?.dateIso ? r.event.dateIso.slice(0, 10) : new Date().toISOString().slice(0, 10));
 
-    await prisma.game.create({
+    const game = await prisma.game.create({
       data: {
         leagueId,
         date: new Date(`${dateOnly}T00:00:00Z`),
@@ -143,11 +160,16 @@ async function persist(results: MatchResult[], resolver: TeamResolver) {
         wentToOvertime: r.wentToOvertime,
         attendance: r.attendance,
         detailsJson: details as any,
-        notes: r.row.notes,
         claimedResult: r.row.claimedResult,
         matchNote: r.reasons.join(" | ") || null,
       },
     });
+
+    if (ownerId) {
+      await prisma.attendance.create({
+        data: { userId: ownerId, gameId: game.id, notes: r.row.notes },
+      });
+    }
     written++;
   }
 

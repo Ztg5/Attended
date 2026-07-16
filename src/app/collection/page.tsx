@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { getChecklist, getVenues, type LeagueChecklist, type VenueVisit } from "@/lib/collection";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { requireUserId } from "@/lib/session";
 import { TeamLogo } from "@/components/TeamLogo";
 import { StadiumMap } from "@/components/StadiumMap";
 import { stateAbbr } from "@/lib/us-states";
@@ -9,7 +9,8 @@ import { stateAbbr } from "@/lib/us-states";
 export const dynamic = "force-dynamic";
 
 export default async function CollectionPage() {
-  const [checklist, venues] = await Promise.all([getChecklist(), getVenues()]);
+  const userId = await requireUserId();
+  const [checklist, venues] = await Promise.all([getChecklist(userId), getVenues(userId)]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
@@ -17,7 +18,6 @@ export default async function CollectionPage() {
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
           <ArrowLeft size={15} /> Attended
         </Link>
-        <ThemeToggle />
       </div>
 
       <header className="mb-8">

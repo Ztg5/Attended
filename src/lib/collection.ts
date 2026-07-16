@@ -18,10 +18,14 @@ export interface LeagueChecklist {
   teams: ChecklistTeam[];
 }
 
-export async function getChecklist(): Promise<LeagueChecklist[]> {
+export async function getChecklist(userId: string): Promise<LeagueChecklist[]> {
   const [leagues, games] = await Promise.all([
     prisma.league.findMany({ include: { teams: { orderBy: { name: "asc" } } } }),
-    prisma.game.findMany({ select: { homeTeamId: true, awayTeamId: true } }),
+    // Only teams the user has actually seen (games they attended) count as "seen".
+    prisma.game.findMany({
+      where: { attendances: { some: { userId } } },
+      select: { homeTeamId: true, awayTeamId: true },
+    }),
   ]);
 
   const seen = new Set<number>();
@@ -67,7 +71,7 @@ export interface VenueVisit {
   leagueCode: string;
 }
 
-export async function getVenues(): Promise<VenueVisit[]> {
+export async function getVenues(userId: string): Promise<VenueVisit[]> {
   const venues = await prisma.venue.findMany({
     select: {
       id: true,
@@ -77,6 +81,8 @@ export async function getVenues(): Promise<VenueVisit[]> {
       latitude: true,
       longitude: true,
       games: {
+        // Count/date only games this user attended at each venue.
+        where: { attendances: { some: { userId } } },
         orderBy: { date: "asc" },
         select: {
           date: true,

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { LogForm } from "./LogForm";
 import type { TeamOpt } from "@/components/TeamPicker";
 
@@ -30,13 +29,12 @@ export default async function LogPage() {
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
           <ArrowLeft size={15} /> Attended
         </Link>
-        <ThemeToggle />
       </div>
 
       <header className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Log a game</h1>
         <p className="mt-1 text-sm text-muted">
-          Pick the teams and date — I&apos;ll pull the result from ESPN for you to confirm.
+          Pick the home team and date — I&apos;ll pull the matchup and result from ESPN for you to confirm.
         </p>
       </header>
 

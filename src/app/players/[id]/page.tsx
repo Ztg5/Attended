@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, TrendingUp } from "lucide-react";
-import { getPlayerDetail, statLabel } from "@/lib/players";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { getPlayerDetail, statLabel, headlineStats } from "@/lib/players";
+import { requireUserId } from "@/lib/session";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,8 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   const playerId = Number(id);
   if (!Number.isFinite(playerId)) notFound();
 
-  const p = await getPlayerDetail(playerId);
+  const userId = await requireUserId();
+  const p = await getPlayerDetail(playerId, userId);
   if (!p) notFound();
 
   const rec = `${p.record.wins}–${p.record.losses}`;
@@ -23,7 +24,6 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         <Link href="/players" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
           <ArrowLeft size={15} /> Players
         </Link>
-        <ThemeToggle />
       </div>
 
       {/* Header */}
@@ -77,7 +77,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
         <h2 className="mb-2.5 text-sm font-semibold uppercase tracking-wide text-muted">Games you saw them</h2>
         <div className="overflow-hidden rounded-lg border border-border bg-surface">
           {p.games.map((g) => {
-            const entries = Object.entries(g.stats);
+            const entries = headlineStats(g.leagueCode, g.stats);
             return (
               <Link
                 key={g.gameId}

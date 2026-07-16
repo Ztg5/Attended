@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getAllGames } from "@/lib/stats";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { requireUserId } from "@/lib/session";
 import { GameLog } from "./GameLog";
 
 export const dynamic = "force-dynamic";
 
 export default async function GamesPage() {
-  const games = await getAllGames();
+  const userId = await requireUserId();
+  const games = await getAllGames(userId);
   const leagues = [...new Set(games.map((g) => g.leagueCode))].sort();
 
   return (
@@ -19,7 +20,6 @@ export default async function GamesPage() {
         >
           <ArrowLeft size={15} /> Attended
         </Link>
-        <ThemeToggle />
       </div>
 
       <header className="mb-6">

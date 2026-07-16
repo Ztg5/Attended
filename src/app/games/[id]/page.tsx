@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Trophy, Timer, MapPin, Users, BarChart3, Star, UsersRound } from "lucide-react";
+import { ArrowLeft, Trophy, Timer, MapPin, BarChart3, Star, UsersRound } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { parseSummary, extractSummary, type LineScore, type TeamStats, type TeamLeaders } from "@/lib/summary";
-import { getGamePlayers, statLabel, type GamePlayerLine } from "@/lib/players";
+import { requireUserId } from "@/lib/session";
+import { parseSummary, extractSummary, type LineScore, type TeamLeaders } from "@/lib/summary";
+import { getGamePlayers, statLabel, headlineStats, type GamePlayerLine } from "@/lib/players";
 import { stateAbbr } from "@/lib/us-states";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { TeamLogo } from "@/components/TeamLogo";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,28 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   const gameId = Number(id);
   if (!Number.isFinite(gameId)) notFound();
 
+  const userId = await requireUserId();
   const g = await prisma.game.findUnique({
     where: { id: gameId },
-    include: { league: true, homeTeam: true, awayTeam: true, venue: true },
+    include: {
+      league: true,
+      homeTeam: true,
+      awayTeam: true,
+      venue: true,
+      // Notes are private (only the current user's is shown). Other attendees are
+      // listed by name only — never their notes.
+      attendances: {
+        select: { notes: true, favoritedAt: true, user: { select: { id: true, name: true, username: true, email: true } } },
+      },
+    },
   });
   if (!g) notFound();
+
+  const mine = g.attendances.find((a) => a.user.id === userId);
+  const myNote = mine?.notes ?? null;
+  const alsoAttended = g.attendances
+    .filter((a) => a.user.id !== userId)
+    .map((a) => ({ name: a.user.name ?? a.user.email ?? "Someone", username: a.user.username }));
 
   const summary = extractSummary(g.detailsJson);
   const parsed = summary ? parseSummary(summary, g.league.code) : null;
@@ -45,7 +63,9 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
         <Link href="/games" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
           <ArrowLeft size={15} /> Game log
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          {mine && <FavoriteButton gameId={g.id} initial={!!mine.favoritedAt} />}
+        </div>
       </div>
 
       {/* Scoreboard header */}
@@ -97,24 +117,43 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
         </div>
       </header>
 
-      {g.notes && <p className="note mt-4 rounded-lg border border-border bg-surface px-5 py-4 leading-relaxed">{g.notes}</p>}
+      {myNote && <p className="note mt-4 rounded-lg border border-border bg-surface px-5 py-4 leading-relaxed">{myNote}</p>}
 
-      {/* Sections — only rendered when the data exists */}
+      {alsoAttended.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-border bg-surface px-5 py-3 text-sm text-muted">
+          <UsersRound size={14} className="text-faint" />
+          <span className="text-xs font-medium uppercase tracking-wide text-faint">Also attended by</span>
+          {alsoAttended.map((a, i) => (
+            <span key={i} className="font-medium text-ink">
+              {a.username ? (
+                <Link href={`/u/${a.username}`} className="hover:text-primary">
+                  {a.name}
+                </Link>
+              ) : (
+                a.name
+              )}
+              {i < alsoAttended.length - 1 ? "," : ""}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Sections — only rendered when the data exists. Team stats intentionally omitted
+          (too much data per game once every user sees it). */}
       {parsed?.lineScore && <LineScoreTable data={parsed.lineScore} />}
-      {parsed?.teamStats && <TeamStatsTable data={parsed.teamStats} />}
       {parsed?.leaders && <LeadersBlock teams={parsed.leaders} />}
 
       {players.length > 0 && (
         <section>
           <SectionHeading icon={<UsersRound size={15} />}>Who you saw</SectionHeading>
           <div className="grid gap-3 sm:grid-cols-2">
-            <PlayerColumn abbr={g.awayTeam?.abbreviation ?? "AWAY"} players={awayPlayers} />
-            <PlayerColumn abbr={g.homeTeam?.abbreviation ?? "HOME"} players={homePlayers} />
+            <PlayerColumn abbr={g.awayTeam?.abbreviation ?? "AWAY"} players={awayPlayers} leagueCode={g.league.code} />
+            <PlayerColumn abbr={g.homeTeam?.abbreviation ?? "HOME"} players={homePlayers} leagueCode={g.league.code} />
           </div>
         </section>
       )}
 
-      {!parsed?.lineScore && !parsed?.teamStats && !parsed?.leaders && (
+      {!parsed?.lineScore && !parsed?.leaders && (
         <div className="mt-6 rounded-lg border border-border bg-surface px-5 py-8 text-center text-sm text-muted">
           Detailed stats aren&apos;t loaded for this game yet.
           <span className="mt-1 block text-faint">Run the summary backfill to populate the box score.</span>
@@ -195,40 +234,6 @@ function LineScoreTable({ data }: { data: LineScore }) {
   );
 }
 
-function TeamStatsTable({ data }: { data: TeamStats }) {
-  return (
-    <section>
-      <SectionHeading icon={<Users size={15} />}>Team stats</SectionHeading>
-      <div className="overflow-hidden rounded-lg border border-border bg-surface">
-        <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 border-b border-border px-4 py-2 text-xs font-medium text-muted">
-          <span />
-          <span className="tnum w-14 text-center">{data.awayAbbr}</span>
-          <span className="tnum w-14 text-center">{data.homeAbbr}</span>
-        </div>
-        {data.groups.map((group, gi) => (
-          <div key={gi}>
-            {group.title && (
-              <div className="border-b border-border bg-surface-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
-                {group.title}
-              </div>
-            )}
-            {group.rows.map((row, ri) => (
-              <div
-                key={ri}
-                className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 border-b border-border px-4 py-2 text-sm last:border-0"
-              >
-                <span className="text-muted">{row.label}</span>
-                <span className="tnum w-14 text-center">{row.away}</span>
-                <span className="tnum w-14 text-center">{row.home}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function LeadersBlock({ teams }: { teams: TeamLeaders[] }) {
   return (
     <section>
@@ -257,7 +262,7 @@ function LeadersBlock({ teams }: { teams: TeamLeaders[] }) {
   );
 }
 
-function PlayerColumn({ abbr, players }: { abbr: string; players: GamePlayerLine[] }) {
+function PlayerColumn({ abbr, players, leagueCode }: { abbr: string; players: GamePlayerLine[]; leagueCode: string }) {
   return (
     <div className="rounded-lg border border-border bg-surface">
       <div className="border-b border-border px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
@@ -265,7 +270,7 @@ function PlayerColumn({ abbr, players }: { abbr: string; players: GamePlayerLine
       </div>
       <ul>
         {players.map((p) => {
-          const entries = Object.entries(p.stats);
+          const entries = headlineStats(leagueCode, p.stats);
           return (
             <li key={p.playerId} className="flex items-start gap-2.5 border-b border-border px-4 py-2.5 last:border-0">
               <PlayerHeadshot url={p.headshotUrl} name={p.name} size={30} />

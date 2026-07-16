@@ -18,7 +18,7 @@ export interface SeedRow {
   league: LeagueCode;
   date: string | null; // YYYY-MM-DD or null (dateless row)
   homeTeam: string;
-  awayTeam: string;
+  awayTeam: string | null; // null = match on the home team alone (log-a-game flow)
   venueOverride: string | null;
   claimedResult: string | null;
   notes: string | null;
@@ -137,6 +137,7 @@ async function resolveDatelessDate(
   row: SeedRow,
   resolver: TeamResolver
 ): Promise<{ date: string | null; note: string }> {
+  if (!row.awayTeam) return { date: null, note: "dateless row needs an away team" };
   const homeT = resolver.resolve(row.league, row.homeTeam);
   const awayT = resolver.resolve(row.league, row.awayTeam);
   if (!homeT || !awayT) return { date: null, note: "dateless + unresolved teams" };
@@ -175,7 +176,7 @@ export async function matchRow(
 ): Promise<MatchResult> {
   const reasons: string[] = [];
   const homeT = resolver.resolve(row.league, row.homeTeam);
-  const awayT = resolver.resolve(row.league, row.awayTeam);
+  const awayT = row.awayTeam ? resolver.resolve(row.league, row.awayTeam) : null;
 
   const base: MatchResult = {
     row,
@@ -198,9 +199,9 @@ export async function matchRow(
       : null,
   };
 
-  if (!homeT || !awayT) {
+  if (!homeT || (row.awayTeam && !awayT)) {
     if (!homeT) reasons.push(`unresolved team nickname: "${row.homeTeam}"`);
-    if (!awayT) reasons.push(`unresolved team nickname: "${row.awayTeam}"`);
+    if (row.awayTeam && !awayT) reasons.push(`unresolved team nickname: "${row.awayTeam}"`);
     return base;
   }
 
@@ -208,6 +209,9 @@ export async function matchRow(
   let candidateDates: string[];
   if (row.date) {
     candidateDates = [row.date, shiftDate(row.date, -1), shiftDate(row.date, 1)];
+  } else if (!row.awayTeam) {
+    reasons.push("a date is required when only the home team is given");
+    return base;
   } else {
     const resolved = await resolveDatelessDate(row, resolver);
     reasons.push(resolved.note);
@@ -231,11 +235,12 @@ export async function matchRow(
     } catch {
       continue; // ESPN hiccup on this date — try the next
     }
-    const hit = events.find(
-      (e) =>
-        e.competitors.some((c) => c.espnTeamId === homeT.espnTeamId) &&
-        e.competitors.some((c) => c.espnTeamId === awayT.espnTeamId)
-    );
+    // A team plays at most one game per date, so the picked team alone identifies it
+    // (on either side); when an away team is also given, require both.
+    const hit = events.find((e) => {
+      if (!e.competitors.some((c) => c.espnTeamId === homeT.espnTeamId)) return false;
+      return awayT ? e.competitors.some((c) => c.espnTeamId === awayT.espnTeamId) : true;
+    });
     if (hit) {
       event = hit;
       matchedDate = date;
@@ -257,7 +262,7 @@ export async function matchRow(
     event,
     matchedDate,
     homeTeamEspnId: espnHome?.espnTeamId ?? homeT.espnTeamId,
-    awayTeamEspnId: espnAway?.espnTeamId ?? awayT.espnTeamId,
+    awayTeamEspnId: espnAway?.espnTeamId ?? awayT?.espnTeamId ?? null,
     homeScore: espnHome?.score ?? null,
     awayScore: espnAway?.score ?? null,
     seasonYear: event.seasonYear,
@@ -272,7 +277,7 @@ export async function matchRow(
   if (row.date && matchedDate !== row.date) {
     result.reasons.push(`date corrected ${row.date} -> ${matchedDate}`);
   }
-  if (espnHome && espnHome.espnTeamId !== homeT.espnTeamId) {
+  if (row.awayTeam && espnHome && espnHome.espnTeamId !== homeT.espnTeamId) {
     result.reasons.push(
       `home/away swapped vs CSV (ESPN home = ${
         resolver.byEspnId(row.league, espnHome.espnTeamId)?.nickname ?? espnHome.espnTeamId

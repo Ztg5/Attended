@@ -13,7 +13,6 @@ const today = () => new Date().toISOString().slice(0, 10);
 export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamOpt[]> }) {
   const [league, setLeague] = useState<string>("NFL");
   const [homeId, setHomeId] = useState<number | null>(null);
-  const [awayId, setAwayId] = useState<number | null>(null);
   const [date, setDate] = useState(today());
 
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -23,12 +22,11 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
   const [pending, start] = useTransition();
 
   const teams = teamsByLeague[league] ?? [];
-  const canFind = homeId && awayId && homeId !== awayId && date;
+  const canFind = homeId && date;
 
   function resetLeague(l: string) {
     setLeague(l);
     setHomeId(null);
-    setAwayId(null);
     setPreview(null);
     setError(null);
   }
@@ -36,7 +34,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
   function find() {
     setError(null);
     start(async () => {
-      const r = await previewMatch(league, homeId!, awayId!, date);
+      const r = await previewMatch(league, homeId!, date);
       setPreview(r);
     });
   }
@@ -44,7 +42,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
   function save(asReview: boolean) {
     setError(null);
     start(async () => {
-      const r = await saveLoggedGame(league, homeId!, awayId!, date, note, asReview);
+      const r = await saveLoggedGame(league, homeId!, date, note, asReview);
       if (r.ok) setSavedId(r.gameId ?? null);
       else setError(r.message);
     });
@@ -56,7 +54,6 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
     setSavedId(null);
     setError(null);
     setHomeId(null);
-    setAwayId(null);
     setDate(today());
   }
 
@@ -195,8 +192,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
         </div>
       </div>
 
-      <TeamPicker label="Away team" teams={teams} value={awayId} onChange={setAwayId} exclude={homeId} />
-      <TeamPicker label="Home team" teams={teams} value={homeId} onChange={setHomeId} exclude={awayId} />
+      <TeamPicker label="Home team" teams={teams} value={homeId} onChange={setHomeId} />
 
       <label className="flex flex-col gap-1">
         <span className="text-xs font-medium uppercase tracking-wide text-muted">Date</span>

@@ -1,15 +1,22 @@
 import Link from "next/link";
 import { ClipboardCheck, ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { requireUserId } from "@/lib/session";
 import { ReviewGame, type GameVM, type TeamOpt } from "./ReviewGame";
 
 export const dynamic = "force-dynamic"; // always reflect the latest DB state
 
 export default async function ReviewPage() {
+  const userId = await requireUserId();
   const games = await prisma.game.findMany({
-    where: { status: "needs_review" },
-    include: { league: true, homeTeam: true, awayTeam: true, venue: true },
+    where: { status: "needs_review", attendances: { some: { userId } } },
+    include: {
+      league: true,
+      homeTeam: true,
+      awayTeam: true,
+      venue: true,
+      attendances: { where: { userId }, select: { notes: true } },
+    },
     orderBy: { date: "desc" },
   });
 
@@ -34,7 +41,6 @@ export default async function ReviewPage() {
         >
           <ArrowLeft size={15} /> Attended
         </Link>
-        <ThemeToggle />
       </div>
 
       <header className="mb-6">
@@ -73,7 +79,7 @@ export default async function ReviewPage() {
               homeScore: g.homeScore,
               awayScore: g.awayScore,
               status: g.status,
-              notes: g.notes ?? "",
+              notes: g.attendances[0]?.notes ?? "",
               matchNote: g.matchNote,
               claimedResult: g.claimedResult,
               venueName: g.venue?.name ?? null,

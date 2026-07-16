@@ -74,7 +74,7 @@ export interface DashboardData {
   recentGames: GameLite[];
 }
 
-function toLite(g: any): GameLite {
+export function toLite(g: any): GameLite {
   const t = (tm: any): TeamLite | null =>
     tm
       ? {
@@ -103,11 +103,12 @@ function toLite(g: any): GameLite {
     wentToOvertime: g.wentToOvertime,
     attendance: g.attendance,
     status: g.status,
-    notes: g.notes ?? null,
+    // Personal note lives on the user's Attendance row (private, per-user).
+    notes: g.attendances?.[0]?.notes ?? null,
   };
 }
 
-const teamSelect = {
+export const teamSelect = {
   id: true,
   nickname: true,
   name: true,
@@ -116,9 +117,9 @@ const teamSelect = {
   primaryColor: true,
 } as const;
 
-// Select only what the UI needs — crucially NOT detailsJson, the heavy raw ESPN
-// blob, which would otherwise be transferred for every game on every read.
-const GAME_SELECT = {
+// Everything a GameLite needs EXCEPT the per-user note (and never detailsJson). Reused
+// for other users' games, where notes must not be selected/exposed.
+export const BASE_GAME_SELECT = {
   id: true,
   date: true,
   seasonYear: true,
@@ -131,15 +132,31 @@ const GAME_SELECT = {
   postseasonRound: true,
   wentToOvertime: true,
   attendance: true,
-  notes: true,
   league: { select: { code: true } },
   homeTeam: { select: teamSelect },
   awayTeam: { select: teamSelect },
   venue: { select: { name: true, city: true, state: true } },
 } as const;
 
-export async function getAllGames(): Promise<GameLite[]> {
-  const games = await prisma.game.findMany({ select: GAME_SELECT, orderBy: { date: "desc" } });
+/** Games this user attended (via their Attendance rows). */
+export function attendedByUser(userId: string) {
+  return { attendances: { some: { userId } } };
+}
+
+// The base select plus the current user's own note (from their Attendance row).
+function gameSelect(userId: string) {
+  return {
+    ...BASE_GAME_SELECT,
+    attendances: { where: { userId }, select: { notes: true } },
+  } as const;
+}
+
+export async function getAllGames(userId: string): Promise<GameLite[]> {
+  const games = await prisma.game.findMany({
+    where: attendedByUser(userId),
+    select: gameSelect(userId),
+    orderBy: { date: "desc" },
+  });
   return games.map(toLite);
 }
 
@@ -166,17 +183,58 @@ function personalResult(g: GameLite, followed: Set<number>) {
   return { team, won: us > them, tie: us === them, home };
 }
 
-export async function getDashboard(): Promise<DashboardData> {
-  const games = (await prisma.game.findMany({ select: GAME_SELECT })).map(toLite);
+/** Ids of a user's own favorite teams (records/streaks are computed only for these). */
+export async function getFollowedTeamIds(userId: string): Promise<Set<number>> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { favoriteTeams: { select: { id: true } } },
+  });
+  return new Set((user?.favoriteTeams ?? []).map((t) => t.id));
+}
+
+/** Overall attending W/L/T over a set of games, from the followed team's perspective. */
+export function recordOverGames(games: GameLite[], followedIds: Set<number>): Record2 {
+  const rec: Record2 = { wins: 0, losses: 0, ties: 0 };
+  for (const g of games) {
+    const r = personalResult(g, followedIds);
+    if (!r) continue;
+    if (r.tie) rec.ties++;
+    else if (r.won) rec.wins++;
+    else rec.losses++;
+  }
+  return rec;
+}
+
+/** A user's headline profile numbers (games, overall record, venues) from their attended games. */
+export async function getUserGameSummary(userId: string) {
+  const games = (
+    await prisma.game.findMany({ where: attendedByUser(userId), select: BASE_GAME_SELECT })
+  ).map(toLite);
+  const followedIds = await getFollowedTeamIds(userId);
+  return {
+    totalGames: games.length,
+    record: recordOverGames(games, followedIds),
+    venuesVisited: new Set(games.map((g) => g.venueName).filter(Boolean)).size,
+  };
+}
+
+export async function getDashboard(userId: string): Promise<DashboardData> {
+  const games = (
+    await prisma.game.findMany({ where: attendedByUser(userId), select: gameSelect(userId) })
+  ).map(toLite);
   const asc = [...games].sort((a, b) => a.date.localeCompare(b.date));
 
-  // Favorite teams (explicit) — records/streaks are computed only for these.
-  const favTeams = await prisma.team.findMany({
-    where: { OR: FAVORITE_TEAMS.map((f) => ({ league: { code: f.league }, nickname: f.nickname })) },
-    select: { id: true, nickname: true, name: true, abbreviation: true, logoUrl: true, primaryColor: true },
+  // The user's own favorite teams — records/streaks are computed only for these.
+  const favUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      favoriteTeams: {
+        select: { id: true, nickname: true, name: true, abbreviation: true, logoUrl: true, primaryColor: true },
+      },
+    },
   });
-  const followedIds = new Set(favTeams.map((t) => t.id));
-  const followedTeams: TeamLite[] = favTeams;
+  const followedTeams: TeamLite[] = favUser?.favoriteTeams ?? [];
+  const followedIds = new Set(followedTeams.map((t) => t.id));
 
   // Records (overall + per followed team).
   const overall: Record2 = { wins: 0, losses: 0, ties: 0 };

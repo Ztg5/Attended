@@ -49,58 +49,10 @@
   --z-tooltip: 60;
 }
 
-:root[data-theme="dark"] {
-  --bg: oklch(0.17 0.008 255);
-  --surface: oklch(0.215 0.01 255);
-  --surface-2: oklch(0.255 0.011 255);
-  --border: oklch(0.3 0.012 255);
-  --ink: oklch(0.95 0.005 255);
-  --muted: oklch(0.7 0.012 255);
-  --faint: oklch(0.6 0.012 255);
-  --logo-plate: oklch(0.9 0.008 255);
-
-  --primary: oklch(0.7 0.13 248);
-  --primary-hover: oklch(0.76 0.13 248);
-  --primary-weak: oklch(0.28 0.05 248);
-  --on-primary: oklch(0.16 0.02 255);
-
-  --gold: oklch(0.8 0.13 85);
-  --on-gold: oklch(0.22 0.03 85);
-  --win: oklch(0.66 0.14 150);
-  --loss: oklch(0.64 0.19 27);
-  --live: oklch(0.76 0.15 65);
-  --on-live: oklch(0.2 0.04 65);
-  --review: oklch(0.68 0.03 285);
-}
-
-/* No-JS / system-preference dark default (when the user hasn't toggled a theme) */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: oklch(0.17 0.008 255);
-    --surface: oklch(0.215 0.01 255);
-    --surface-2: oklch(0.255 0.011 255);
-    --border: oklch(0.3 0.012 255);
-    --ink: oklch(0.95 0.005 255);
-    --muted: oklch(0.7 0.012 255);
-    --faint: oklch(0.6 0.012 255);
-    --logo-plate: oklch(0.9 0.008 255);
-    --primary: oklch(0.7 0.13 248);
-    --primary-hover: oklch(0.76 0.13 248);
-    --primary-weak: oklch(0.28 0.05 248);
-    --on-primary: oklch(0.16 0.02 255);
-    --gold: oklch(0.8 0.13 85);
-    --on-gold: oklch(0.22 0.03 85);
-    --win: oklch(0.66 0.14 150);
-    --loss: oklch(0.64 0.19 27);
-    --live: oklch(0.76 0.15 65);
-    --on-live: oklch(0.2 0.04 65);
-    --review: oklch(0.68 0.03 285);
-  }
-}
-
 /* Fallback for browsers without OKLCH support (older mobile Safari < 15.4 /
    Chrome < 111). Without this, every oklch() background and border is dropped and
-   the UI renders as unstyled text. Modern browsers ignore this block and keep OKLCH. */
+   the UI renders as unstyled text. Modern browsers ignore this block and keep OKLCH.
+   Light-only — the app no longer has a dark theme. */
 @supports not (color: oklch(0 0 0)) {
   :root {
     --bg: #ffffff;
@@ -125,55 +77,11 @@
     --on-live: #31200e;
     --review: #7e7e92;
   }
-  :root[data-theme="dark"] {
-    --bg: #0d1013;
-    --surface: #161a1e;
-    --surface-2: #1f2328;
-    --border: #2a2e34;
-    --ink: #eceff2;
-    --muted: #9a9fa6;
-    --faint: #7b8187;
-    --logo-plate: #dadee3;
-    --primary: #56a4eb;
-    --primary-hover: #69b7ff;
-    --primary-weak: #132b40;
-    --on-primary: #080e16;
-    --gold: #e4b750;
-    --on-gold: #211909;
-    --win: #47aa62;
-    --loss: #e95048;
-    --live: #f19b37;
-    --on-live: #221202;
-    --review: #9696ab;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0d1013;
-      --surface: #161a1e;
-      --surface-2: #1f2328;
-      --border: #2a2e34;
-      --ink: #eceff2;
-      --muted: #9a9fa6;
-      --faint: #7b8187;
-      --logo-plate: #dadee3;
-      --primary: #56a4eb;
-      --primary-hover: #69b7ff;
-      --primary-weak: #132b40;
-      --on-primary: #080e16;
-      --gold: #e4b750;
-      --on-gold: #211909;
-      --win: #47aa62;
-      --loss: #e95048;
-      --live: #f19b37;
-      --on-live: #221202;
-      --review: #9696ab;
-    }
-  }
 }
 
 @layer base {
   html {
-    color-scheme: light dark;
+    color-scheme: light;
   }
   body {
     background: var(--bg);

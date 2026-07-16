@@ -1,5 +1,6 @@
-// Attended — Phase 1 schema
-// Single-user personal app tracking pro sporting events attended.
+// Attended — multi-user schema
+// Games are GLOBAL (one row per real-world game, shared by everyone). Each user's
+// personal attendance + private notes live in Attendance. Auth via Auth.js (Google).
 
 generator client {
   provider = "prisma-client-js"
@@ -9,6 +10,102 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+// --- Auth (Auth.js / NextAuth standard Prisma schema) -----------------------
+// User is our own record keyed to the Google identity via Account.providerAccountId.
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  username      String?   @unique // handle for social features; chosen on first sign-in
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  accounts    Account[]
+  sessions    Session[]
+  attendances Attendance[]
+
+  requestsSent     Friendship[] @relation("RequestsSent")
+  requestsReceived Friendship[] @relation("RequestsReceived")
+
+  // The user's own favorite teams — records/streaks are computed for these (per-user).
+  favoriteTeams Team[] @relation("UserFavoriteTeams")
+}
+
+// Friend graph with request/approve. A single row per pair (either direction); friends
+// once status = "accepted". `@@unique([requesterId, addresseeId])` plus an app-level
+// check for the reverse pair prevents duplicate requests.
+model Friendship {
+  id          String    @id @default(cuid())
+  requester   User      @relation("RequestsSent", fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId String
+  addressee   User      @relation("RequestsReceived", fields: [addresseeId], references: [id], onDelete: Cascade)
+  addresseeId String
+  status      String    @default("pending") // pending | accepted
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@index([requesterId, status])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// One user's attendance of one (global) game. Personal notes live here — never on
+// Game — and are private to the user. Unique on (userId, gameId): you attend a game once.
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  gameId    Int
+  notes     String? // personal memories — private to this user
+  favoritedAt DateTime? // non-null = one of the user's favorite games (capped at 4 in app)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, gameId])
+  @@index([userId])
+  @@index([gameId])
 }
 
 model League {
@@ -35,6 +132,7 @@ model Team {
   homeGames   Game[]       @relation("HomeTeam")
   awayGames   Game[]       @relation("AwayTeam")
   gamePlayers GamePlayer[]
+  favoritedBy User[]       @relation("UserFavoriteTeams")
 
   @@unique([leagueId, espnTeamId])
   @@index([leagueId])
@@ -77,7 +175,6 @@ model Game {
   wentToOvertime  Boolean @default(false)
   attendance      Int?
   detailsJson     Json? // raw-ish ESPN blob: line scores, broadcast, weather, notes
-  notes           String? // personal memories from the CSV
 
   // Provenance / review bookkeeping
   claimedResult String? // the CSV's claimed_result, kept for auditing
@@ -86,6 +183,7 @@ model Game {
   createdAt DateTime @default(now())
 
   gamePlayers GamePlayer[]
+  attendances Attendance[]
 
   @@index([leagueId])
   @@index([date])
