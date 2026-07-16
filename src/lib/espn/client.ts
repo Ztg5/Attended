@@ -33,11 +33,12 @@ export class EspnError extends Error {
   }
 }
 
-async function getJson(url: string): Promise<any> {
+async function getJson(url: string, init?: { next?: { revalidate?: number } }): Promise<any> {
   let res: Response;
   try {
     res = await fetch(url, {
       headers: { "user-agent": "attended/0.1 (personal project)" },
+      ...init,
     });
   } catch (err) {
     throw new EspnError(`network error: ${(err as Error).message}`, url);
@@ -148,6 +149,18 @@ export async function fetchTeamSchedule(
   return events.map((e: any) => normalizeEvent(league, e));
 }
 
+/** Same as fetchTeamSchedule, but cached for 24h — for the /schedule batch-add page. */
+export async function fetchTeamScheduleCached(
+  league: LeagueCode,
+  espnTeamId: string,
+  season: number
+): Promise<EspnEvent[]> {
+  const url = `${SITE_BASE}/${LEAGUE_PATH[league]}/teams/${espnTeamId}/schedule?season=${season}`;
+  const json = await getJson(url, { next: { revalidate: 86400 } });
+  const events = json?.events ?? [];
+  return events.map((e: any) => normalizeEvent(league, e));
+}
+
 /** Event summary — richer per-game detail (line scores, weather, broadcast). */
 export async function fetchSummary(
   league: LeagueCode,
@@ -159,6 +172,17 @@ export async function fetchSummary(
 
 // ---- Normalization ---------------------------------------------------------
 
+/**
+ * Parse a competitor score to a finite number or null. The scoreboard endpoint returns
+ * a string ("24"); the team-schedule endpoint returns an object ({ value, displayValue }).
+ * Anything else (unplayed games, malformed) becomes null — never NaN.
+ */
+function parseScore(raw: any): number | null {
+  if (raw == null || raw === "") return null;
+  const n = typeof raw === "object" ? Number(raw.value ?? raw.displayValue) : Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 function normalizeEvent(league: LeagueCode, e: any): EspnEvent {
   const comp = e.competitions?.[0] ?? {};
   const seasonType = e.season?.type ?? comp.type?.id ?? 2;
@@ -169,7 +193,7 @@ function normalizeEvent(league: LeagueCode, e: any): EspnEvent {
     (c: any): EspnCompetitor => ({
       espnTeamId: String(c.team?.id ?? c.id),
       homeAway: c.homeAway,
-      score: c.score != null && c.score !== "" ? Number(c.score) : null,
+      score: parseScore(c.score),
       winner: typeof c.winner === "boolean" ? c.winner : null,
     })
   );

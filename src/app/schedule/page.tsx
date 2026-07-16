@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { LogTabs } from "./LogTabs";
-import type { ScheduleTeamOpt } from "../schedule/page";
+import { ScheduleForm } from "./ScheduleForm";
+import type { TeamOpt } from "@/components/TeamPicker";
 
 export const dynamic = "force-dynamic";
 
-export default async function LogPage() {
+export interface ScheduleTeamOpt extends TeamOpt {
+  espnTeamId: string;
+}
+
+export default async function SchedulePage() {
   const teams = await prisma.team.findMany({
     include: { league: true },
     orderBy: { name: "asc" },
@@ -33,13 +37,13 @@ export default async function LogPage() {
       </div>
 
       <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Add games</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
         <p className="mt-1 text-sm text-muted">
-          Two ways to add games you&apos;ve been to — one at a time, or a whole team&apos;s season at once.
+          Pick a team and season, then check off every game you attended to add them all at once.
         </p>
       </header>
 
-      <LogTabs teamsByLeague={teamsByLeague} />
+      <ScheduleForm teamsByLeague={teamsByLeague} />
     </main>
   );
 }
