@@ -93,15 +93,6 @@ export function PlayersGrid({ players }: { players: PlayerListItem[] }) {
               className="w-full rounded-lg border border-border bg-surface py-1.5 pl-8 pr-2.5 text-sm outline-none focus:border-primary"
             />
           </label>
-          <button
-            onClick={() => setMvpOnly((m) => !m)}
-            aria-pressed={mvpOnly}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors ${
-              mvpOnly ? "border-primary bg-primary-weak text-primary" : "border-border bg-surface text-muted hover:text-ink"
-            }`}
-          >
-            <Award size={15} /> MVPs
-          </button>
           <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1 sm:ml-auto">
             <span className="px-1.5 text-xs text-faint">Sort</span>
             <button className={tab(sort === "seen")} onClick={() => setSort("seen")}>
@@ -109,6 +100,13 @@ export function PlayersGrid({ players }: { players: PlayerListItem[] }) {
             </button>
             <button className={tab(sort === "name")} onClick={() => setSort("name")}>
               Name
+            </button>
+            <button
+              className={`${tab(mvpOnly)} inline-flex items-center gap-1`}
+              onClick={() => setMvpOnly((m) => !m)}
+              aria-pressed={mvpOnly}
+            >
+              <Award size={14} /> MVPs
             </button>
           </div>
         </div>

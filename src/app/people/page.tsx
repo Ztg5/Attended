@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowLeft, Search, Users, Inbox } from "lucide-react";
+import { Search, Users, Inbox } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import { requireUserId } from "@/lib/session";
 import { getIncomingRequests, getOutgoingRequests, getFriends, searchUsers, type UserLite } from "@/lib/social";
 import { FriendButton, type FriendStatus } from "@/components/FriendButton";
@@ -21,9 +22,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> Attended
-        </Link>
+        <BackLink />
       </div>
 
       <header className="mb-6">

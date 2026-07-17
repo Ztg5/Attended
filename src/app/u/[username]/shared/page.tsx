@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { requireUserId } from "@/lib/session";
 import { getSharedGamesView } from "@/lib/social";
 import { GameLine } from "@/components/GameLine";
+import { BackLink } from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +22,7 @@ export default async function SharedGamesPage({ params }: { params: Promise<{ us
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link
-          href={`/u/${view.target.username}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
-        >
-          <ArrowLeft size={15} /> {display}
-        </Link>
+        <BackLink fallback={`/u/${view.target.username}`} />
       </div>
 
       <header className="mb-6 mt-4">
@@ -45,7 +41,7 @@ export default async function SharedGamesPage({ params }: { params: Promise<{ us
 
       <div className="mt-6 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
         {view.games.map((g) => (
-          <Link key={g.id} href={`/games/${g.id}?from=/u/${view.target.username}/shared`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
+          <Link key={g.id} href={`/games/${g.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
             <span className="tnum w-[4.5rem] shrink-0 text-xs text-muted">{g.date}</span>
             <GameLine g={g} size={22} />
             <span className="ml-auto text-xs uppercase tracking-wide text-faint">{g.leagueCode}</span>

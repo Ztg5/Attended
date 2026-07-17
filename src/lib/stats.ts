@@ -61,7 +61,7 @@ export interface LeagueRecords {
   highestScoring: GameLite | null;
   lowestScoring: GameLite | null;
   biggestBlowout: GameLite | null;
-  closest: GameLite | null;
+  biggestCrowd: GameLite | null;
 }
 
 export interface DashboardData {
@@ -312,7 +312,7 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
       highestScoring: maxBy(list, total),
       lowestScoring: minBy(list, total),
       biggestBlowout: maxBy(list, margin),
-      closest: minBy(list, margin),
+      biggestCrowd: maxBy(list.filter((g) => g.attendance != null), (g) => g.attendance ?? 0),
     };
   });
 

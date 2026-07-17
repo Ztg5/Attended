@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { ClipboardCheck, ArrowLeft } from "lucide-react";
+import { ClipboardCheck } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
+import { BackLink } from "@/components/BackLink";
 import { ReviewGame, type GameVM, type TeamOpt } from "./ReviewGame";
 
 export const dynamic = "force-dynamic"; // always reflect the latest DB state
@@ -48,12 +48,7 @@ export default async function ReviewPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
-        >
-          <ArrowLeft size={15} /> Attended
-        </Link>
+        <BackLink />
       </div>
 
       <header className="mb-6">

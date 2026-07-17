@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Zap, Trophy, TrendingDown, Crosshair } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap, Trophy, TrendingDown, Users } from "lucide-react";
 import { GameLine } from "./GameLine";
 import type { GameLite, LeagueRecords } from "@/lib/stats";
 
@@ -42,7 +42,7 @@ export function RecordsCarousel({
         { icon: <Trophy size={15} />, label: "Highest scoring", game: l.highestScoring, detail: (g: GameLite) => `${total(g)} combined` },
         { icon: <TrendingDown size={15} />, label: "Lowest scoring", game: l.lowestScoring, detail: (g: GameLite) => `${total(g)} combined` },
         { icon: <Zap size={15} />, label: "Biggest blowout", game: l.biggestBlowout, detail: (g: GameLite) => `${margin(g)}-pt margin` },
-        { icon: <Crosshair size={15} />, label: "Closest game", game: l.closest, detail: (g: GameLite) => `${margin(g)}-pt margin` },
+        { icon: <Users size={15} />, label: "Biggest crowd", game: l.biggestCrowd, detail: (g: GameLite) => `${(g.attendance ?? 0).toLocaleString()} fans` },
       ],
     })),
   ].filter((p) => p.cards.some((c) => c.game));
@@ -97,7 +97,7 @@ function RecordCard({ card }: { card: Card }) {
   );
   const cls = "block rounded-lg border border-border bg-surface px-4 py-3";
   return card.game ? (
-    <Link href={`/games/${card.game.id}?from=/`} className={`${cls} transition-colors hover:bg-surface-2`}>
+    <Link href={`/games/${card.game.id}`} className={`${cls} transition-colors hover:bg-surface-2`}>
       {inner}
     </Link>
   ) : (

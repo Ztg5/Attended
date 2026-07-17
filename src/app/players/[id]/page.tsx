@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import { getPlayerDetail, statLabel, headlineStats } from "@/lib/players";
 import { requireUserId } from "@/lib/session";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
@@ -21,9 +22,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href="/players" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> Players
-        </Link>
+        <BackLink fallback="/players" />
       </div>
 
       {/* Header */}

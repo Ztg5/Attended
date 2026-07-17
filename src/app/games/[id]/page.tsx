@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Trophy, Timer, MapPin, BarChart3, Star, UsersRound } from "lucide-react";
+import { Trophy, Timer, MapPin, BarChart3, Star, UsersRound } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { parseSummary, extractSummary, type LineScore, type TeamLeaders } from "@/lib/summary";
@@ -12,21 +13,10 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
-export default async function GameDetailPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ from?: string }>;
-}) {
+export default async function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const gameId = Number(id);
   if (!Number.isFinite(gameId)) notFound();
-
-  // Back link honors where you came from (e.g. a friend's shared-games page). Only
-  // internal paths are trusted, defaulting to the game log.
-  const fromParam = (await searchParams).from;
-  const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/games";
 
   const userId = await requireUserId();
   const g = await prisma.game.findUnique({
@@ -71,9 +61,7 @@ export default async function GameDetailPage({
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> Back
-        </Link>
+        <BackLink fallback="/games" />
         <div className="flex items-center gap-2">
           {mine && <FavoriteButton gameId={g.id} initial={!!mine.favoritedAt} />}
         </div>

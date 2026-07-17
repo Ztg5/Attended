@@ -1,8 +1,7 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getAllGames, getTeamGames, getStreakGames, type GameLite } from "@/lib/stats";
 import { requireUserId } from "@/lib/session";
+import { BackLink } from "@/components/BackLink";
 import { GameLog } from "./GameLog";
 
 export const dynamic = "force-dynamic";
@@ -45,12 +44,7 @@ export default async function GamesPage({
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
-        >
-          <ArrowLeft size={15} /> Attended
-        </Link>
+        <BackLink />
       </div>
 
       <header className="mb-6">

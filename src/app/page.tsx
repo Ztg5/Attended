@@ -73,7 +73,7 @@ export default async function Home() {
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="Games" value={d.totalGames} href="/games" />
         <Stat label="Record attending" value={rec(d.overall.wins, d.overall.losses, d.overall.ties)} sub={`${pct(d.overall.wins, d.overall.losses)}% W`} />
-        <Stat label="Venues" value={d.venuesVisited} href="/collection" />
+        <Stat label="Venues" value={d.venuesVisited} href="/collection#stadiums" />
         <Stat label="Playoff games" value={d.playoffCount} href="/games?filter=playoffs" />
         <Stat label="Win streak" value={d.currentWinStreak} icon={<Flame size={14} />} sub="current" href="/games?streak=current" />
         <Stat label="Longest streak" value={d.longestWinStreak} sub="wins in a row" href="/games?streak=longest" />

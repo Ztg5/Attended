@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Star, LayoutGrid, Users, Lock, ArrowRight } from "lucide-react";
+import { Star, LayoutGrid, Users, Lock, ArrowRight } from "lucide-react";
 import { requireUserId } from "@/lib/session";
 import { getProfile } from "@/lib/social";
 import { GameLine } from "@/components/GameLine";
 import { FriendButton } from "@/components/FriendButton";
+import { BackLink } from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +23,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href="/people" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> People
-        </Link>
+        <BackLink fallback="/people" />
       </div>
 
       {/* Header */}
@@ -78,7 +77,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             {full.favorites.length ? (
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
                 {full.favorites.map((g) => (
-                  <Link key={g.id} href={`/games/${g.id}?from=/u/${user.username}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
+                  <Link key={g.id} href={`/games/${g.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
                     <span className="tnum w-[4.5rem] shrink-0 text-xs text-muted">{g.date}</span>
                     <GameLine g={g} size={22} />
                     <span className="ml-auto text-xs uppercase tracking-wide text-faint">{g.leagueCode}</span>

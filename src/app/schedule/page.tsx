@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { BackLink } from "@/components/BackLink";
 import { ScheduleForm } from "./ScheduleForm";
 import type { TeamOpt } from "@/components/TeamPicker";
 
@@ -31,9 +30,7 @@ export default async function SchedulePage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> Attended
-        </Link>
+        <BackLink />
       </div>
 
       <header className="mb-6">

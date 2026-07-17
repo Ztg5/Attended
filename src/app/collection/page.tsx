@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { getChecklist, getVenues, type LeagueChecklist, type VenueVisit } from "@/lib/collection";
 import { requireUserId } from "@/lib/session";
+import { BackLink } from "@/components/BackLink";
 import { TeamLogo } from "@/components/TeamLogo";
 import { StadiumMap } from "@/components/StadiumMap";
 import { stateAbbr } from "@/lib/us-states";
@@ -15,9 +15,7 @@ export default async function CollectionPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> Attended
-        </Link>
+        <BackLink />
       </div>
 
       <header className="mb-8">
@@ -35,7 +33,7 @@ export default async function CollectionPage() {
       </section>
 
       {/* Stadiums */}
-      <section className="mt-12">
+      <section id="stadiums" className="mt-12 scroll-mt-6">
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Stadiums</h2>
           <span className="tnum text-sm text-muted">

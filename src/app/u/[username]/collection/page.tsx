@@ -1,11 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, LayoutGrid } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { friendStatus } from "@/lib/social";
 import { getChecklist } from "@/lib/collection";
 import { TeamLogo } from "@/components/TeamLogo";
+import { BackLink } from "@/components/BackLink";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +29,7 @@ export default async function FriendCollectionPage({ params }: { params: Promise
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <div className="mb-1">
-        <Link href={`/u/${target.username}`} className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> {display}
-        </Link>
+        <BackLink fallback={`/u/${target.username}`} />
       </div>
 
       <header className="mb-6 mt-4">

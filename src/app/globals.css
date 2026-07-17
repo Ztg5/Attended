@@ -90,6 +90,17 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  /* Kill the ~300ms mobile tap delay (browser waiting for a double-tap-to-zoom) on
+     interactive elements. Pinch-zoom still works. */
+  a,
+  button,
+  [role="button"],
+  label,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
   /* Scores, stats, records — the command-center voice */
   .tnum {
     font-family: var(--font-mono);
