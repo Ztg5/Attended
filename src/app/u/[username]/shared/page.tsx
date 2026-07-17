@@ -25,11 +25,7 @@ export default async function SharedGamesPage({ params }: { params: Promise<{ us
         <BackLink fallback={`/u/${view.target.username}`} />
       </div>
 
-      <PageMasthead
-        title="Games you both attended"
-        subtitle={`Every game you and ${display} were both at.`}
-        className="mb-6 mt-4"
-      />
+      <PageMasthead title="Games you both attended" className="mb-6 mt-4" />
 
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
         <Stat label="Shared games" value={view.games.length} />

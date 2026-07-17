@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Inbox } from "lucide-react";
+import { Search } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { PageMasthead } from "@/components/PageMasthead";
 import { requireUserId } from "@/lib/session";
@@ -26,10 +26,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         <BackLink />
       </div>
 
-      <PageMasthead
-        title="People"
-        subtitle="Find friends by username and compare the games you've seen."
-      />
+      <PageMasthead title="People" />
 
       {/* Search (GET form) */}
       <form method="get" className="mb-6">
@@ -55,7 +52,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       )}
 
       {incoming.length > 0 && (
-        <Section title="Friend requests" icon={<Inbox size={15} />}>
+        <Section title="Friend requests">
           {incoming.map((u) => <UserRow key={u.id} user={u} status="incoming" />)}
         </Section>
       )}

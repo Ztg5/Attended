@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { TrendingUp } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { getPlayerDetail, statLabel, headlineStats } from "@/lib/players";
 import { requireUserId } from "@/lib/session";
@@ -58,9 +57,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       {p.totals.length > 0 && (
         <section className="mt-6">
           <h2 className="section-head mb-3">
-            <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
-              <TrendingUp size={15} className="text-faint" /> Totals in games you attended
-            </span>
+            <span className="shrink-0 text-[15px] font-semibold text-ink">Totals in games you attended</span>
             <span className="rule" />
           </h2>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">

@@ -16,10 +16,7 @@ export default async function PlayersPage() {
         <BackLink />
       </div>
 
-      <PageMasthead
-        title="Players seen"
-        subtitle="Every player who appeared in a box score of a game you attended."
-      />
+      <PageMasthead title="Players seen" />
 
       <PlayersGrid players={players} />
     </main>

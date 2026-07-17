@@ -34,10 +34,7 @@ export default async function SchedulePage() {
         <BackLink />
       </div>
 
-      <PageMasthead
-        title="Schedule"
-        subtitle="Pick a team and season, then check off every game you attended to add them all at once."
-      />
+      <PageMasthead title="Schedule" />
 
       <ScheduleForm teamsByLeague={teamsByLeague} />
     </main>

@@ -17,7 +17,6 @@ export default async function GamesPage({
 
   let games: GameLite[];
   let title = "Game log";
-  let subtitle = "Every game, filterable and searchable. Tap a row for the venue, details, and the note.";
 
   const teamId = sp.team ? Number(sp.team) : null;
   if (teamId && Number.isFinite(teamId)) {
@@ -27,15 +26,12 @@ export default async function GamesPage({
     ]);
     games = g;
     title = team ? `${team.name} games` : "Team games";
-    subtitle = "Every game you attended with this team.";
   } else if (sp.filter === "playoffs") {
     games = (await getAllGames(userId)).filter((g) => g.isPostseason);
     title = "Playoff games";
-    subtitle = "Every postseason game you attended.";
   } else if (sp.streak === "current" || sp.streak === "longest") {
     games = await getStreakGames(userId, sp.streak);
     title = sp.streak === "current" ? "Current win streak" : "Longest win streak";
-    subtitle = "The games in this run of wins with your favorite teams.";
   } else {
     games = await getAllGames(userId);
   }
@@ -48,7 +44,7 @@ export default async function GamesPage({
         <BackLink />
       </div>
 
-      <PageMasthead title={title} subtitle={subtitle} />
+      <PageMasthead title={title} />
 
       {games.length === 0 ? (
         <div className="rounded-lg border border-border bg-surface px-4 py-10 text-center text-sm text-muted">

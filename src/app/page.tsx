@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ClipboardCheck, ArrowRight, Flame, PlusCircle, LayoutGrid, Users, UserRound } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getDashboard } from "@/lib/stats";
 import { requireUserId } from "@/lib/session";
@@ -42,27 +41,20 @@ export default async function Home() {
           <div className="flex flex-wrap items-center gap-2">
           {needsReview > 0 && (
             <ButtonLink href="/review" variant="secondary">
-              <ClipboardCheck size={15} style={{ color: "var(--review)" }} />
               <span className="tnum">{needsReview}</span> to review
             </ButtonLink>
           )}
-          <ButtonLink href="/collection" variant="secondary">
-            <LayoutGrid size={15} /> Collection
-          </ButtonLink>
-          <ButtonLink href="/players" variant="secondary">
-            <Users size={15} /> Players
-          </ButtonLink>
+          <ButtonLink href="/collection" variant="secondary">Collection</ButtonLink>
+          <ButtonLink href="/players" variant="secondary">Players</ButtonLink>
           <ButtonLink href="/people" variant="secondary">
-            <UserRound size={15} /> People
+            People
             {friendRequests > 0 && (
               <span className="tnum ml-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold" style={{ background: "var(--primary)", color: "var(--on-primary)" }}>
                 {friendRequests}
               </span>
             )}
           </ButtonLink>
-          <ButtonLink href="/log" variant="primary">
-            <PlusCircle size={15} /> Log a game
-          </ButtonLink>
+          <ButtonLink href="/log" variant="primary">Log a game</ButtonLink>
           <UserMenu />
           </div>
         </div>
@@ -80,11 +72,10 @@ export default async function Home() {
         <Stat label="Games" value={d.totalGames} href="/games" />
         <Stat label="Venues" value={d.venuesVisited} href="/collection#stadiums" />
         <Stat label="Playoff games" value={d.playoffCount} href="/games?filter=playoffs" />
-        <Stat label="Win streak" value={d.currentWinStreak} icon={<Flame size={14} />} sub="current" href="/games?streak=current" />
+        <Stat label="Win streak" value={d.currentWinStreak} sub="current" href="/games?streak=current" />
         <Stat label="Longest streak" value={d.longestWinStreak} sub="wins in a row" href="/games?streak=longest" />
       </section>
       <p className="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 px-1 text-xs text-muted">
-        <span className="standfirst italic text-faint">Games by league —</span>
         {d.perLeague.map((l) => (
           <span key={l.code}>
             <span className="font-medium text-ink">{l.code}</span>{" "}
@@ -96,7 +87,6 @@ export default async function Home() {
       {/* Followed teams — each row links to that team's game log. */}
       <Section
         title="By team"
-        hint="Your record with your teams"
         action={
           <Link href="/choose-teams" className="text-sm text-primary hover:text-primary-hover">
             Edit
@@ -136,8 +126,8 @@ export default async function Home() {
       <Section
         title="Recent games"
         action={
-          <Link href="/games" className="inline-flex items-center gap-1 text-sm text-primary hover:text-primary-hover">
-            Full log <ArrowRight size={14} />
+          <Link href="/games" className="text-sm text-primary hover:text-primary-hover">
+            Full log →
           </Link>
         }
       >

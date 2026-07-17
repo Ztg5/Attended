@@ -19,11 +19,7 @@ export default async function CollectionPage() {
         <BackLink />
       </div>
 
-      <PageMasthead
-        title="Collection"
-        subtitle="Every team you've watched, and every stadium you've set foot in."
-        className="mb-8"
-      />
+      <PageMasthead title="Collection" className="mb-8" />
 
       {/* Team checklists */}
       <section className="flex flex-col gap-7">

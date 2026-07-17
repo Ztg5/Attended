@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Zap, Trophy, TrendingDown, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GameLine } from "./GameLine";
 import type { GameLite, LeagueRecords } from "@/lib/stats";
 
 interface Card {
-  icon?: React.ReactNode;
   label: string;
   game: GameLite | null;
   detail: (g: GameLite) => string;
@@ -39,10 +38,10 @@ export function RecordsCarousel({
     ...perLeague.map((l): Page => ({
       title: `${l.code} records`,
       cards: [
-        { icon: <Trophy size={15} />, label: "Highest scoring", game: l.highestScoring, detail: (g: GameLite) => `${total(g)} combined` },
-        { icon: <TrendingDown size={15} />, label: "Lowest scoring", game: l.lowestScoring, detail: (g: GameLite) => `${total(g)} combined` },
-        { icon: <Zap size={15} />, label: "Biggest blowout", game: l.biggestBlowout, detail: (g: GameLite) => `${margin(g)}-pt margin` },
-        { icon: <Users size={15} />, label: "Biggest crowd", game: l.biggestCrowd, detail: (g: GameLite) => `${(g.attendance ?? 0).toLocaleString()} fans` },
+        { label: "Highest scoring", game: l.highestScoring, detail: (g: GameLite) => `${total(g)} combined` },
+        { label: "Lowest scoring", game: l.lowestScoring, detail: (g: GameLite) => `${total(g)} combined` },
+        { label: "Biggest blowout", game: l.biggestBlowout, detail: (g: GameLite) => `${margin(g)}-pt margin` },
+        { label: "Biggest crowd", game: l.biggestCrowd, detail: (g: GameLite) => `${(g.attendance ?? 0).toLocaleString()} fans` },
       ],
     })),
   ].filter((p) => p.cards.some((c) => c.game));
@@ -82,10 +81,7 @@ export function RecordsCarousel({
 function RecordCard({ card }: { card: Card }) {
   const inner = (
     <>
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted">
-        {card.icon && <span className="text-faint">{card.icon}</span>}
-        {card.label}
-      </div>
+      <div className="mb-2 text-xs font-medium text-muted">{card.label}</div>
       {card.game ? (
         <>
           <GameLine g={card.game} size={22} />

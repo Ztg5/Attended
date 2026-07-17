@@ -32,11 +32,7 @@ export default async function FriendCollectionPage({ params }: { params: Promise
         <BackLink fallback={`/u/${target.username}`} />
       </div>
 
-      <PageMasthead
-        title={`${display}'s collection`}
-        subtitle={`Every team ${display} has watched in person.`}
-        className="mb-6 mt-4"
-      />
+      <PageMasthead title={`${display}'s collection`} className="mb-6 mt-4" />
 
       <section className="flex flex-col gap-7">
         {checklist.map((l) => {

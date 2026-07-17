@@ -30,10 +30,7 @@ export default async function LogPage() {
         <BackLink />
       </div>
 
-      <PageMasthead
-        title="Add games"
-        subtitle="Two ways to add games you've been to — one at a time, or a whole team's season at once."
-      />
+      <PageMasthead title="Add games" />
 
       <LogTabs teamsByLeague={teamsByLeague} />
     </main>

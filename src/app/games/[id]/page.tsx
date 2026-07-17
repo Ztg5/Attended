@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Trophy, Timer, MapPin, BarChart3, Star, UsersRound } from "lucide-react";
+import { Trophy, Timer, MapPin } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
@@ -120,7 +120,6 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
 
       {alsoAttended.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-border bg-surface px-5 py-3 text-sm text-muted">
-          <UsersRound size={14} className="text-faint" />
           <span className="standfirst text-sm italic text-faint">Also attended by</span>
           {alsoAttended.map((a, i) => (
             <span key={i} className="font-medium text-ink">
@@ -144,7 +143,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
 
       {players.length > 0 && (
         <section>
-          <SectionHeading icon={<UsersRound size={15} />}>Who you saw</SectionHeading>
+          <SectionHeading>Who you saw</SectionHeading>
           <div className="grid gap-3 sm:grid-cols-2">
             <PlayerColumn abbr={g.awayTeam?.abbreviation ?? "AWAY"} players={awayPlayers} leagueCode={g.league.code} />
             <PlayerColumn abbr={g.homeTeam?.abbreviation ?? "HOME"} players={homePlayers} leagueCode={g.league.code} />
@@ -188,13 +187,10 @@ function TeamSide({
   );
 }
 
-function SectionHeading({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h2 className="section-head mb-3 mt-8">
-      <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
-        <span className="text-faint">{icon}</span>
-        {children}
-      </span>
+      <span className="shrink-0 text-[15px] font-semibold text-ink">{children}</span>
       <span className="rule" />
     </h2>
   );
@@ -203,7 +199,7 @@ function SectionHeading({ icon, children }: { icon: React.ReactNode; children: R
 function LineScoreTable({ data }: { data: LineScore }) {
   return (
     <section>
-      <SectionHeading icon={<BarChart3 size={15} />}>Line score</SectionHeading>
+      <SectionHeading>Line score</SectionHeading>
       <div className="overflow-x-auto rounded-lg border border-border bg-surface">
         <table className="w-full min-w-[22rem] text-sm">
           <thead>
@@ -239,7 +235,7 @@ function LineScoreTable({ data }: { data: LineScore }) {
 function LeadersBlock({ teams }: { teams: TeamLeaders[] }) {
   return (
     <section>
-      <SectionHeading icon={<Star size={15} />}>Game leaders</SectionHeading>
+      <SectionHeading>Game leaders</SectionHeading>
       <div className="grid gap-3 sm:grid-cols-2">
         {teams.map((team) => (
           <div key={team.abbr} className="rounded-lg border border-border bg-surface">

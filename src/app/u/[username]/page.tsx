@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Star, LayoutGrid, Users, Lock, ArrowRight } from "lucide-react";
+import { Users, Lock, ArrowRight } from "lucide-react";
 import { requireUserId } from "@/lib/session";
 import { getProfile } from "@/lib/social";
 import { GameLine } from "@/components/GameLine";
@@ -72,9 +72,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           {/* Favorite games */}
           <section className="mt-8">
             <h2 className="section-head mb-3">
-              <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
-                <Star size={15} style={{ color: "var(--gold)" }} /> Favorite games
-              </span>
+              <span className="shrink-0 text-[15px] font-semibold text-ink">Favorite games</span>
               <span className="rule" />
             </h2>
             {full.favorites.length ? (
@@ -97,9 +95,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           {/* Collection preview */}
           <section className="mt-8">
             <h2 className="section-head mb-3">
-              <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
-                <LayoutGrid size={15} className="text-faint" /> Collection
-              </span>
+              <span className="shrink-0 text-[15px] font-semibold text-ink">Collection</span>
               <span className="rule" />
             </h2>
             <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
