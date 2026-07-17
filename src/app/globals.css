@@ -100,6 +100,16 @@
   select,
   textarea {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Immediate press feedback on touch devices (no hover state) so a tap registers
+     visually at once, even while a dynamic page is still loading. */
+  @media (hover: none) {
+    a:active,
+    button:active,
+    [role="button"]:active {
+      opacity: 0.55;
+    }
   }
   /* Scores, stats, records — the command-center voice */
   .tnum {
