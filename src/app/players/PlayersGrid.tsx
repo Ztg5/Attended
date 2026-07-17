@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Award } from "lucide-react";
 import { PlayerHeadshot } from "@/components/PlayerHeadshot";
 import type { PlayerListItem } from "@/lib/players";
 
@@ -14,6 +14,7 @@ export function PlayersGrid({ players }: { players: PlayerListItem[] }) {
   const [sort, setSort] = useState<Sort>("seen");
   const [league, setLeague] = useState<string>("ALL");
   const [position, setPosition] = useState<string>("ALL");
+  const [mvpOnly, setMvpOnly] = useState(false);
 
   const leagues = useMemo(
     () => LEAGUE_ORDER.filter((code) => players.some((p) => p.leagueCode === code)),
@@ -34,12 +35,13 @@ export function PlayersGrid({ players }: { players: PlayerListItem[] }) {
       if (query && !p.name.toLowerCase().includes(query)) return false;
       if (league !== "ALL" && p.leagueCode !== league) return false;
       if (position !== "ALL" && p.position !== position) return false;
+      if (mvpOnly && !p.isMvp) return false;
       return true;
     });
     return [...list].sort((a, b) =>
       sort === "seen" ? b.timesSeen - a.timesSeen || a.name.localeCompare(b.name) : a.name.localeCompare(b.name)
     );
-  }, [players, q, sort, league, position]);
+  }, [players, q, sort, league, position, mvpOnly]);
 
   function pickLeague(code: string) {
     setLeague(code);
@@ -91,6 +93,15 @@ export function PlayersGrid({ players }: { players: PlayerListItem[] }) {
               className="w-full rounded-lg border border-border bg-surface py-1.5 pl-8 pr-2.5 text-sm outline-none focus:border-primary"
             />
           </label>
+          <button
+            onClick={() => setMvpOnly((m) => !m)}
+            aria-pressed={mvpOnly}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors ${
+              mvpOnly ? "border-primary bg-primary-weak text-primary" : "border-border bg-surface text-muted hover:text-ink"
+            }`}
+          >
+            <Award size={15} /> MVPs
+          </button>
           <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1 sm:ml-auto">
             <span className="px-1.5 text-xs text-faint">Sort</span>
             <button className={tab(sort === "seen")} onClick={() => setSort("seen")}>
@@ -117,7 +128,10 @@ export function PlayersGrid({ players }: { players: PlayerListItem[] }) {
             >
               <PlayerHeadshot url={p.headshotUrl} name={p.name} size={40} />
               <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">{p.name}</span>
+                <span className="flex items-center gap-1 truncate text-sm font-medium">
+                  <span className="truncate">{p.name}</span>
+                  {p.isMvp && <Award size={13} className="shrink-0" style={{ color: "var(--gold)" }} aria-label="MVP" />}
+                </span>
                 <span className="text-xs text-muted">
                   {p.position ? `${p.position} · ` : ""}
                   <span className="tnum">{p.timesSeen}</span> seen

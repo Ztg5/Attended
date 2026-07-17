@@ -198,6 +198,7 @@ model Player {
   name         String
   position     String?
   headshotUrl  String?
+  isMvp        Boolean      @default(false) // won a league MVP (backfilled from ESPN awards)
   gamePlayers  GamePlayer[]
 }
 

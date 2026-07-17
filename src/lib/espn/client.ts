@@ -184,6 +184,38 @@ export async function fetchSummary(
   return getJson(url);
 }
 
+// core.api.espn.com uses {sport}/leagues/{league}; the marquee league MVP award name.
+const CORE_LEAGUE_PATH: Record<LeagueCode, string> = {
+  NFL: "football/leagues/nfl",
+  MLB: "baseball/leagues/mlb",
+  NBA: "basketball/leagues/nba",
+  NHL: "hockey/leagues/nhl",
+};
+const MVP_AWARD_NAME: Record<LeagueCode, string> = {
+  NFL: "NFL MVP",
+  MLB: "MVP",
+  NBA: "MVP",
+  NHL: "Hart Memorial Trophy",
+};
+
+/**
+ * Whether an athlete has won their league's MVP, per ESPN's awards list. Best-effort:
+ * resolves each award $ref and matches the marquee MVP award name (e.g. "MVP",
+ * "NFL MVP", "Hart Memorial Trophy"). Returns false on any error. Used by the MVP backfill.
+ */
+export async function fetchAthleteIsMvp(league: LeagueCode, espnAthleteId: string): Promise<boolean> {
+  const target = MVP_AWARD_NAME[league];
+  const url = `https://sports.core.api.espn.com/v2/sports/${CORE_LEAGUE_PATH[league]}/athletes/${espnAthleteId}/awards?limit=100`;
+  const list = await getJson(url).catch(() => null);
+  for (const it of list?.items ?? []) {
+    const ref = it?.$ref ? String(it.$ref).replace("http://", "https://") : null;
+    if (!ref) continue;
+    const a = await getJson(ref).catch(() => null);
+    if (a && (a.displayName === target || a.name === target)) return true;
+  }
+  return false;
+}
+
 // ---- Normalization ---------------------------------------------------------
 
 /**

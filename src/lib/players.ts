@@ -71,6 +71,7 @@ export interface PlayerListItem {
   headshotUrl: string | null;
   timesSeen: number;
   leagueCode: string | null;
+  isMvp: boolean;
 }
 
 const TACKLE_KEYS = new Set(["totalTackles", "soloTackles", "assistTackles"]);
@@ -108,6 +109,7 @@ export async function getPlayersList(userId: string): Promise<PlayerListItem[]> 
       name: true,
       position: true,
       headshotUrl: true,
+      isMvp: true,
       // stats power the noise filter; league (a player is one sport) comes from any game.
       gamePlayers: {
         where: attendedGame,
@@ -124,6 +126,7 @@ export async function getPlayersList(userId: string): Promise<PlayerListItem[]> 
       headshotUrl: p.headshotUrl,
       timesSeen: p.gamePlayers.length,
       leagueCode: p.gamePlayers[0]?.game.league.code ?? null,
+      isMvp: p.isMvp,
     }))
     .sort((a, b) => b.timesSeen - a.timesSeen || a.name.localeCompare(b.name));
 }

@@ -56,6 +56,7 @@ npm run import                 # full import into Postgres (clears + rewrites th
 npm run db:push                # push prisma/schema.prisma to the database
 npm run backfill:summaries -- --missing-only   # fetch ESPN box-score summaries into details_json
 npm run backfill:players       # parse players from stored details_json (no ESPN calls)
+npm run backfill:mvp           # flag Player.isMvp from ESPN awards (league MVP); re-run after adding players
 npx tsx --env-file=.env scripts/backfill-venue-coords.ts   # set venue lat/long from the curated table
 npx tsx --env-file=.env scripts/verify.ts                  # sanity-check persisted data
 npm run migrate:multiuser -- --backup                      # snapshot Game.notes → notes-backup.json
@@ -148,7 +149,8 @@ All four phases complete, plus post-plan features:
 - **Game detail** (`/games/[id]`) — line score, team stats, game leaders (renders only
   sections present in the data), and a "Who you saw" player list. Parser in `summary.ts`.
 - **Player tracking** — `/players` (searchable/sortable grid, filter by league then position,
-  headshots, times-seen) and `/players/[id]` (games seen, career totals excluding rate/max
+  **MVP filter** via `Player.isMvp` from `npm run backfill:mvp`, headshots, times-seen; noise
+  players with only an empty/lone-tackle line are hidden) and `/players/[id]` (games seen, career totals excluding rate/max
   stats, team record, "stats available for X of Y" note). Log flow extracts players
   automatically; `scripts/backfill-players.ts` backfilled the rest from `details_json`.
 - **Deployed** to Vercel (see Deployment above). OKLCH color tokens have an `@supports`

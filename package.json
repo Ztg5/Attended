@@ -18,6 +18,7 @@
     "import:dry": "tsx scripts/import-games.ts --dry-run",
     "backfill:summaries": "tsx --env-file=.env scripts/backfill-summaries.ts",
     "backfill:players": "tsx --env-file=.env scripts/backfill-players.ts",
+    "backfill:mvp": "tsx --env-file=.env scripts/backfill-mvp.ts",
     "migrate:multiuser": "tsx --env-file=.env scripts/migrate-multiuser.ts"
   },
   "dependencies": {
