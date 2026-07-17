@@ -42,6 +42,7 @@ export interface GameLite {
   attendance: number | null;
   status: string;
   notes: string | null;
+  favorited: boolean;
 }
 
 export interface Record2 {
@@ -55,6 +56,14 @@ export interface FollowedRecord extends Record2 {
   games: number;
 }
 
+export interface LeagueRecords {
+  code: string;
+  highestScoring: GameLite | null;
+  lowestScoring: GameLite | null;
+  biggestBlowout: GameLite | null;
+  closest: GameLite | null;
+}
+
 export interface DashboardData {
   totalGames: number;
   perLeague: { code: string; count: number }[];
@@ -63,13 +72,11 @@ export interface DashboardData {
   followed: FollowedRecord[];
   currentWinStreak: number;
   longestWinStreak: number;
+  playoffCount: number;
+  favoritesCount: number;
   records: {
-    biggestBlowout: GameLite | null;
-    highestScoring: GameLite | null;
-    closest: GameLite | null;
-    playoffCount: number;
     firstByLeague: { code: string; game: GameLite }[];
-    firstRoad: GameLite | null;
+    perLeague: LeagueRecords[];
   };
   recentGames: GameLite[];
 }
@@ -105,6 +112,7 @@ export function toLite(g: any): GameLite {
     status: g.status,
     // Personal note lives on the user's Attendance row (private, per-user).
     notes: g.attendances?.[0]?.notes ?? null,
+    favorited: g.attendances?.[0]?.favoritedAt != null,
   };
 }
 
@@ -147,7 +155,7 @@ export function attendedByUser(userId: string) {
 function gameSelect(userId: string) {
   return {
     ...BASE_GAME_SELECT,
-    attendances: { where: { userId }, select: { notes: true } },
+    attendances: { where: { userId }, select: { notes: true, favoritedAt: true } },
   } as const;
 }
 
@@ -294,11 +302,19 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
   }
   firstByLeague.sort((a, b) => a.game.date.localeCompare(b.game.date));
 
-  const firstRoad =
-    asc.find((g) => {
-      const r = personalResult(g, followedIds);
-      return r && !r.home;
-    }) ?? null;
+  // Per-league record cards (highest/lowest scoring, biggest blowout, closest), ordered
+  // by how many games the user has in each league.
+  const leagueOrder = [...perLeagueCounts.entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c);
+  const perLeagueRecords: LeagueRecords[] = leagueOrder.map((code) => {
+    const list = scored.filter((g) => g.leagueCode === code);
+    return {
+      code,
+      highestScoring: maxBy(list, total),
+      lowestScoring: minBy(list, total),
+      biggestBlowout: maxBy(list, margin),
+      closest: minBy(list, margin),
+    };
+  });
 
   const venuesVisited = new Set(games.map((g) => g.venueName).filter(Boolean)).size;
 
@@ -312,14 +328,45 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
     followed: [...perTeam.values()].sort((a, b) => b.games - a.games),
     currentWinStreak,
     longestWinStreak,
-    records: {
-      biggestBlowout: maxBy(scored, margin),
-      highestScoring: maxBy(scored, total),
-      closest: minBy(scored, margin),
-      playoffCount: games.filter((g) => g.isPostseason).length,
-      firstByLeague,
-      firstRoad,
-    },
-    recentGames: [...games].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 12),
+    playoffCount: games.filter((g) => g.isPostseason).length,
+    favoritesCount: games.filter((g) => g.favorited).length,
+    records: { firstByLeague, perLeague: perLeagueRecords },
+    recentGames: [...games].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5),
   };
+}
+
+// --- filtered game sets for the clickable dashboard boxes --------------------
+
+/** Attended games involving a team (home or away), newest first. */
+export async function getTeamGames(userId: string, teamId: number): Promise<GameLite[]> {
+  const games = await prisma.game.findMany({
+    where: { AND: [attendedByUser(userId), { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] }] },
+    select: gameSelect(userId),
+    orderBy: { date: "desc" },
+  });
+  return games.map(toLite);
+}
+
+/** The games making up the user's current or longest win streak (favorite-team results). */
+export async function getStreakGames(userId: string, which: "current" | "longest"): Promise<GameLite[]> {
+  const games = (
+    await prisma.game.findMany({ where: attendedByUser(userId), select: gameSelect(userId) })
+  ).map(toLite);
+  const asc = [...games].sort((a, b) => a.date.localeCompare(b.date));
+  const followedIds = await getFollowedTeamIds(userId);
+
+  let run: GameLite[] = [];
+  let longest: GameLite[] = [];
+  for (const g of asc) {
+    const r = personalResult(g, followedIds);
+    if (!r || r.tie) continue; // ties neither extend nor break the streak
+    if (r.won) {
+      run.push(g);
+      if (run.length > longest.length) longest = [...run];
+    } else {
+      run = [];
+    }
+  }
+  const streak = which === "current" ? run : longest;
+  return [...streak].reverse(); // newest first, matching the game log
 }

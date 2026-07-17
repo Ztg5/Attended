@@ -45,7 +45,7 @@ export default async function SharedGamesPage({ params }: { params: Promise<{ us
 
       <div className="mt-6 divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
         {view.games.map((g) => (
-          <Link key={g.id} href={`/games/${g.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
+          <Link key={g.id} href={`/games/${g.id}?from=/u/${view.target.username}/shared`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
             <span className="tnum w-[4.5rem] shrink-0 text-xs text-muted">{g.date}</span>
             <GameLine g={g} size={22} />
             <span className="ml-auto text-xs uppercase tracking-wide text-faint">{g.leagueCode}</span>

@@ -78,7 +78,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             {full.favorites.length ? (
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
                 {full.favorites.map((g) => (
-                  <Link key={g.id} href={`/games/${g.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
+                  <Link key={g.id} href={`/games/${g.id}?from=/u/${user.username}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
                     <span className="tnum w-[4.5rem] shrink-0 text-xs text-muted">{g.date}</span>
                     <GameLine g={g} size={22} />
                     <span className="ml-auto text-xs uppercase tracking-wide text-faint">{g.leagueCode}</span>
@@ -99,14 +99,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             </h2>
             <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
               {full.collection.map((c) => (
-                <div key={c.code} className="bg-bg px-4 py-3">
+                <Link key={c.code} href={`/u/${user.username}/collection`} className="bg-bg px-4 py-3 transition-colors hover:bg-surface">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted">{c.code}</div>
                   <div className="tnum mt-1 text-lg font-semibold leading-none">
                     {c.seen}
                     <span className="text-sm font-normal text-faint">/{c.total}</span>
                   </div>
                   <div className="text-[11px] text-faint">teams seen</div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

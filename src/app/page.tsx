@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { ClipboardCheck, ArrowRight, Flame, Trophy, Zap, Crosshair, Plane, PlusCircle, LayoutGrid, Users, UserRound } from "lucide-react";
+import { ClipboardCheck, ArrowRight, Flame, PlusCircle, LayoutGrid, Users, UserRound } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { getDashboard, type GameLite } from "@/lib/stats";
+import { getDashboard } from "@/lib/stats";
 import { requireUserId } from "@/lib/session";
 import { ButtonLink } from "@/components/Button";
 import { UserMenu } from "@/components/UserMenu";
 import { TeamLogo } from "@/components/TeamLogo";
-import { GameLine } from "@/components/GameLine";
 import { GameRow } from "@/components/GameRow";
 import { PendingRefresh } from "@/components/PendingRefresh";
+import { RecordsCarousel } from "@/components/RecordsCarousel";
+import { FavoritePrompt } from "@/components/FavoritePrompt";
 
 // Render on demand (not prerendered at build) so deploys never depend on the DB
 // being reachable. Queries are trimmed (see stats.ts) so per-request cost is small.
@@ -66,14 +67,16 @@ export default async function Home() {
 
       {pendingCount > 0 && <PendingRefresh count={pendingCount} />}
 
-      {/* Headline band */}
+      {d.totalGames > 0 && d.favoritesCount === 0 && <FavoritePrompt />}
+
+      {/* Headline band — every box links somewhere except the record. */}
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Games" value={d.totalGames} />
+        <Stat label="Games" value={d.totalGames} href="/games" />
         <Stat label="Record attending" value={rec(d.overall.wins, d.overall.losses, d.overall.ties)} sub={`${pct(d.overall.wins, d.overall.losses)}% W`} />
-        <Stat label="Venues" value={d.venuesVisited} />
-        <Stat label="Playoff games" value={d.records.playoffCount} />
-        <Stat label="Win streak" value={d.currentWinStreak} icon={<Flame size={14} />} sub="current" />
-        <Stat label="Longest streak" value={d.longestWinStreak} sub="wins in a row" />
+        <Stat label="Venues" value={d.venuesVisited} href="/collection" />
+        <Stat label="Playoff games" value={d.playoffCount} href="/games?filter=playoffs" />
+        <Stat label="Win streak" value={d.currentWinStreak} icon={<Flame size={14} />} sub="current" href="/games?streak=current" />
+        <Stat label="Longest streak" value={d.longestWinStreak} sub="wins in a row" href="/games?streak=longest" />
       </section>
       <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 px-1 text-xs text-muted">
         {d.perLeague.map((l) => (
@@ -84,7 +87,7 @@ export default async function Home() {
         ))}
       </p>
 
-      {/* Followed teams */}
+      {/* Followed teams — each row links to that team's game log. */}
       <Section
         title="By team"
         hint="Your record with your teams"
@@ -97,7 +100,7 @@ export default async function Home() {
         {d.followed.length > 0 ? (
           <div className="divide-y divide-border rounded-lg border border-border bg-surface">
             {d.followed.map((f) => (
-              <div key={f.team.id} className="flex items-center gap-3 px-4 py-3">
+              <Link key={f.team.id} href={`/games?team=${f.team.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
                 <TeamLogo url={f.team.logoUrl} alt={f.team.name} size={30} />
                 <span className="font-medium">{f.team.name}</span>
                 <span className="ml-auto flex items-baseline gap-3">
@@ -105,7 +108,7 @@ export default async function Home() {
                   <span className="tnum w-12 text-right text-sm text-muted">{pct(f.wins, f.losses)}%</span>
                   <span className="tnum w-16 text-right text-xs text-faint">{f.games} games</span>
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
@@ -118,20 +121,10 @@ export default async function Home() {
         )}
       </Section>
 
-      {/* Personal records */}
-      <Section title="Personal records">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <RecordCard icon={<Zap size={15} />} label="Biggest blowout" g={d.records.biggestBlowout} detail={(g) => `${Math.abs((g.homeScore ?? 0) - (g.awayScore ?? 0))}-pt margin`} />
-          <RecordCard icon={<Trophy size={15} />} label="Highest scoring" g={d.records.highestScoring} detail={(g) => `${(g.homeScore ?? 0) + (g.awayScore ?? 0)} combined`} />
-          <RecordCard icon={<Crosshair size={15} />} label="Closest game" g={d.records.closest} detail={(g) => `${Math.abs((g.homeScore ?? 0) - (g.awayScore ?? 0))}-pt margin`} />
-          <RecordCard icon={<Plane size={15} />} label="First road trip" g={d.records.firstRoad} detail={(g) => g.date} />
-        </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          {d.records.firstByLeague.map((f) => (
-            <RecordCard key={f.code} label={`First ${f.code}`} g={f.game} detail={(g) => g.date} compact />
-          ))}
-        </div>
-      </Section>
+      {/* Personal records — carousel: first games, then per-league records. */}
+      <section className="mt-8">
+        <RecordsCarousel firstByLeague={d.records.firstByLeague} perLeague={d.records.perLeague} />
+      </section>
 
       {/* Recent games */}
       <Section
@@ -157,21 +150,31 @@ function Stat({
   value,
   sub,
   icon,
+  href,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   icon?: React.ReactNode;
+  href?: string;
 }) {
-  return (
-    <div className="bg-bg px-4 py-3.5">
+  const inner = (
+    <>
       <div className="flex items-baseline gap-1.5">
         <span className="tnum text-2xl font-semibold leading-none">{value}</span>
         {icon && <span className="text-faint">{icon}</span>}
       </div>
       <div className="mt-1.5 text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
       {sub && <div className="tnum text-[11px] text-faint">{sub}</div>}
-    </div>
+    </>
+  );
+  const cls = "bg-bg px-4 py-3.5";
+  return href ? (
+    <Link href={href} className={`${cls} block transition-colors hover:bg-surface`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }
 
@@ -197,36 +200,5 @@ function Section({
       </div>
       {children}
     </section>
-  );
-}
-
-function RecordCard({
-  icon,
-  label,
-  g,
-  detail,
-  compact = false,
-}: {
-  icon?: React.ReactNode;
-  label: string;
-  g: GameLite | null;
-  detail: (g: GameLite) => string;
-  compact?: boolean;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-surface px-4 py-3">
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
-        {icon}
-        {label}
-      </div>
-      {g ? (
-        <>
-          <GameLine g={g} size={compact ? 20 : 24} />
-          <div className="tnum mt-1.5 text-xs text-faint">{detail(g)}</div>
-        </>
-      ) : (
-        <div className="text-sm text-faint">—</div>
-      )}
-    </div>
   );
 }

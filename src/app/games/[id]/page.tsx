@@ -12,10 +12,21 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 
 export const dynamic = "force-dynamic";
 
-export default async function GameDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function GameDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
+}) {
   const { id } = await params;
   const gameId = Number(id);
   if (!Number.isFinite(gameId)) notFound();
+
+  // Back link honors where you came from (e.g. a friend's shared-games page). Only
+  // internal paths are trusted, defaulting to the game log.
+  const fromParam = (await searchParams).from;
+  const backHref = fromParam && fromParam.startsWith("/") ? fromParam : "/games";
 
   const userId = await requireUserId();
   const g = await prisma.game.findUnique({
@@ -60,8 +71,8 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
-        <Link href="/games" className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
-          <ArrowLeft size={15} /> Game log
+        <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
+          <ArrowLeft size={15} /> Back
         </Link>
         <div className="flex items-center gap-2">
           {mine && <FavoriteButton gameId={g.id} initial={!!mine.favoritedAt} />}

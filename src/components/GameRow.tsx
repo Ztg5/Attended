@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronDown, MapPin, Trophy, Timer, StickyNote, Pencil, Trash2, Check, X, BarChart3 } from "lucide-react";
+import { ChevronDown, MapPin, Trophy, Timer, StickyNote, Pencil, Trash2, Check, X, BarChart3, Star } from "lucide-react";
 import { TeamLogo } from "./TeamLogo";
 import { Button } from "./Button";
-import { updateGame, deleteGame } from "@/app/log/actions";
+import { updateGame, deleteGame, toggleFavorite } from "@/app/log/actions";
 import { stateAbbr } from "@/lib/us-states";
 import type { GameLite } from "@/lib/stats";
 
@@ -15,6 +15,8 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
   const [editing, setEditing] = useState(false);
   const [gone, setGone] = useState(false);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [fav, setFav] = useState(g.favorited);
+  const [favMsg, setFavMsg] = useState<string | null>(null);
   const [f, setF] = useState({
     date: g.date,
     homeScore: g.homeScore?.toString() ?? "",
@@ -31,6 +33,15 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
   const otLabel = g.leagueCode === "MLB" ? "XI" : "OT";
 
   const inputCls = "rounded border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-primary";
+
+  function toggleFav() {
+    setFavMsg(null);
+    start(async () => {
+      const r = await toggleFavorite(g.id);
+      if (r.ok) setFav(r.favorited);
+      else setFavMsg(r.message);
+    });
+  }
 
   if (gone) return null;
 
@@ -62,6 +73,7 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
 
         {/* meta */}
         <span className="hidden items-center gap-2 text-xs text-muted md:flex">
+          {fav && <Star size={13} fill="var(--gold)" style={{ color: "var(--gold)" }} />}
           {g.isPostseason && <Trophy size={13} style={{ color: "var(--gold)" }} />}
           {g.wentToOvertime && <span className="rounded bg-surface-2 px-1 py-0.5 tnum">{otLabel}</span>}
           {g.notes && <StickyNote size={13} className="text-faint" />}
@@ -103,12 +115,24 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
           </div>
           {g.notes && <p className="note max-w-[68ch] leading-relaxed text-ink">{g.notes}</p>}
 
-          <Link
-            href={`/games/${g.id}`}
-            className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover"
-          >
-            <BarChart3 size={13} /> View box score
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link
+              href={`/games/${g.id}`}
+              className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover"
+            >
+              <BarChart3 size={13} /> View box score
+            </Link>
+            <button
+              onClick={toggleFav}
+              disabled={pending}
+              className="inline-flex w-fit items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-50"
+              style={{ color: fav ? "var(--gold)" : "var(--muted)" }}
+            >
+              <Star size={13} fill={fav ? "var(--gold)" : "none"} />
+              {fav ? "Favorited" : "Add to favorites"}
+            </button>
+            {favMsg && <span className="text-xs" style={{ color: "var(--loss)" }}>{favMsg}</span>}
+          </div>
 
           {manage && !editing && (
             <div className="mt-1 flex items-center gap-2">
