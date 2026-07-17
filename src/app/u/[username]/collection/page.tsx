@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
-import { LayoutGrid } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { friendStatus } from "@/lib/social";
 import { getChecklist } from "@/lib/collection";
 import { TeamLogo } from "@/components/TeamLogo";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 
 export const dynamic = "force-dynamic";
 
@@ -32,12 +32,11 @@ export default async function FriendCollectionPage({ params }: { params: Promise
         <BackLink fallback={`/u/${target.username}`} />
       </div>
 
-      <header className="mb-6 mt-4">
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight">
-          <LayoutGrid size={24} className="text-primary" /> {display}&apos;s collection
-        </h1>
-        <p className="mt-1 text-sm text-muted">Every team {display} has watched in person.</p>
-      </header>
+      <PageMasthead
+        title={`${display}'s collection`}
+        subtitle={`Every team ${display} has watched in person.`}
+        className="mb-6 mt-4"
+      />
 
       <section className="flex flex-col gap-7">
         {checklist.map((l) => {

@@ -115,7 +115,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
               </div>
             ) : (
               <div className="px-5 py-4">
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">
+                <label className="mb-1.5 block text-xs font-medium text-muted">
                   Note (the memory)
                 </label>
                 <textarea
@@ -138,7 +138,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
                 <li key={i}>{r}</li>
               ))}
             </ul>
-            <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">Note (optional)</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted">Note (optional)</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -176,7 +176,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
       <div>
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">League</span>
+        <span className="mb-1.5 block text-xs font-medium text-muted">League</span>
         <div className="flex gap-1 rounded-lg border border-border bg-bg p-1">
           {LEAGUES.map((l) => (
             <button
@@ -195,7 +195,7 @@ export function LogForm({ teamsByLeague }: { teamsByLeague: Record<string, TeamO
       <TeamPicker label="Home team" teams={teams} value={homeId} onChange={setHomeId} />
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted">Date</span>
+        <span className="text-xs font-medium text-muted">Date</span>
         <input
           type="date"
           value={date}

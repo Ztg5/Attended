@@ -137,6 +137,53 @@
   }
 }
 
+@layer components {
+  /* --- The almanac's signature layer -------------------------------------
+     A beat-writer's box-score ledger: an editorial section-rule, a masthead
+     nameplate, and the double-hairline "ledger rule" borrowed from newspaper
+     sports pages. These replace the uppercase-eyebrow + stat-card-grid grammar
+     that read as generic dashboard. See DESIGN.md. */
+
+  /* Ledger rule — a 2px ink hairline over a 1px border hairline, with a gap
+     between (the box-score / masthead double rule). The app's signature divider. */
+  .rule-ledger {
+    height: 4px;
+    border: 0;
+    background-image: linear-gradient(var(--ink), var(--ink)),
+      linear-gradient(var(--border), var(--border));
+    background-repeat: no-repeat;
+    background-size: 100% 2px, 100% 1px;
+    background-position: top left, bottom left;
+  }
+
+  /* Masthead nameplate — the publication title. Heavier + tighter than a plain
+     h1 so it reads as a sports-section front page, not an app header. */
+  .nameplate {
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+
+  /* Editorial section header: Title Case ink label, a serif-italic standfirst,
+     and a hairline rule that runs out to the row's action. No uppercase. */
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+  }
+  .section-head > .rule {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    align-self: center;
+  }
+  /* The standfirst — the writer's voice, in the same serif as the notes. */
+  .standfirst {
+    font-family: var(--font-serif);
+    font-style: italic;
+    text-wrap: pretty;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

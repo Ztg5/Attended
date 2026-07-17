@@ -32,7 +32,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           {(user.username ?? user.name ?? "?").slice(0, 1).toUpperCase()}
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-bold tracking-tight">{display}</h1>
+          <h1 className="nameplate truncate text-[1.75rem] leading-none">{display}</h1>
           {user.name && user.username && <p className="text-sm text-muted">{user.name}</p>}
         </div>
         {status !== "self" && <FriendButton targetId={user.id} status={status} size="md" />}
@@ -71,8 +71,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
           {/* Favorite games */}
           <section className="mt-8">
-            <h2 className="mb-2.5 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-              <Star size={15} style={{ color: "var(--gold)" }} /> Favorite games
+            <h2 className="section-head mb-3">
+              <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
+                <Star size={15} style={{ color: "var(--gold)" }} /> Favorite games
+              </span>
+              <span className="rule" />
             </h2>
             {full.favorites.length ? (
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
@@ -93,8 +96,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
           {/* Collection preview */}
           <section className="mt-8">
-            <h2 className="mb-2.5 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-              <LayoutGrid size={15} /> Collection
+            <h2 className="section-head mb-3">
+              <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
+                <LayoutGrid size={15} className="text-faint" /> Collection
+              </span>
+              <span className="rule" />
             </h2>
             <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
               {full.collection.map((c) => (
@@ -119,7 +125,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-bg px-4 py-3.5">
       <div className="tnum text-2xl font-semibold leading-none">{value}</div>
-      <div className="mt-1.5 text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1.5 text-[11px] font-medium text-muted">{label}</div>
     </div>
   );
 }

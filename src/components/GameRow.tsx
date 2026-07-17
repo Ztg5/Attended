@@ -164,19 +164,19 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
 
           {manage && editing && (
             <div className="mt-1 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-muted">
+              <label className="flex flex-col gap-1 text-[11px] text-muted">
                 Date
                 <input type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} className={`${inputCls} tnum`} />
               </label>
-              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-muted">
+              <label className="flex flex-col gap-1 text-[11px] text-muted">
                 Away
                 <input inputMode="numeric" value={f.awayScore} onChange={(e) => setF({ ...f, awayScore: e.target.value })} className={`${inputCls} tnum`} />
               </label>
-              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-muted">
+              <label className="flex flex-col gap-1 text-[11px] text-muted">
                 Home
                 <input inputMode="numeric" value={f.homeScore} onChange={(e) => setF({ ...f, homeScore: e.target.value })} className={`${inputCls} tnum`} />
               </label>
-              <label className="flex flex-col gap-1 text-[11px] uppercase tracking-wide text-muted">
+              <label className="flex flex-col gap-1 text-[11px] text-muted">
                 Status
                 <select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} className={inputCls}>
                   <option value="final">final</option>
@@ -184,7 +184,7 @@ export function GameRow({ g, manage = false }: { g: GameLite; manage?: boolean }
                   <option value="needs_review">needs_review</option>
                 </select>
               </label>
-              <label className="col-span-2 flex flex-col gap-1 text-[11px] uppercase tracking-wide text-muted sm:col-span-4">
+              <label className="col-span-2 flex flex-col gap-1 text-[11px] text-muted sm:col-span-4">
                 Note
                 <textarea value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} rows={2} className={`${inputCls} note`} />
               </label>

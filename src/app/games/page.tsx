@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getAllGames, getTeamGames, getStreakGames, type GameLite } from "@/lib/stats";
 import { requireUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { GameLog } from "./GameLog";
 
 export const dynamic = "force-dynamic";
@@ -47,10 +48,7 @@ export default async function GamesPage({
         <BackLink />
       </div>
 
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="mt-1 text-sm text-muted">{subtitle}</p>
-      </header>
+      <PageMasthead title={title} subtitle={subtitle} />
 
       {games.length === 0 ? (
         <div className="rounded-lg border border-border bg-surface px-4 py-10 text-center text-sm text-muted">

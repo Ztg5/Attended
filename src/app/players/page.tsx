@@ -1,7 +1,7 @@
-import { Users } from "lucide-react";
 import { getPlayersList } from "@/lib/players";
 import { requireUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { PlayersGrid } from "./PlayersGrid";
 
 export const dynamic = "force-dynamic";
@@ -16,15 +16,10 @@ export default async function PlayersPage() {
         <BackLink />
       </div>
 
-      <header className="mb-6">
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight">
-          <Users size={24} className="text-primary" />
-          Players seen
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Every player who appeared in a box score of a game you attended.
-        </p>
-      </header>
+      <PageMasthead
+        title="Players seen"
+        subtitle="Every player who appeared in a box score of a game you attended."
+      />
 
       <PlayersGrid players={players} />
     </main>

@@ -2,6 +2,7 @@ import { MapPin } from "lucide-react";
 import { getChecklist, getVenues, type LeagueChecklist, type VenueVisit } from "@/lib/collection";
 import { requireUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { TeamLogo } from "@/components/TeamLogo";
 import { StadiumMap } from "@/components/StadiumMap";
 import { stateAbbr } from "@/lib/us-states";
@@ -18,12 +19,11 @@ export default async function CollectionPage() {
         <BackLink />
       </div>
 
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Collection</h1>
-        <p className="mt-1 text-sm text-muted">
-          Every team you&apos;ve watched, and every stadium you&apos;ve set foot in.
-        </p>
-      </header>
+      <PageMasthead
+        title="Collection"
+        subtitle="Every team you've watched, and every stadium you've set foot in."
+        className="mb-8"
+      />
 
       {/* Team checklists */}
       <section className="flex flex-col gap-7">
@@ -34,11 +34,10 @@ export default async function CollectionPage() {
 
       {/* Stadiums */}
       <section id="stadiums" className="mt-12 scroll-mt-6">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Stadiums</h2>
-          <span className="tnum text-sm text-muted">
-            {venues.length} visited
-          </span>
+        <div className="section-head mb-3">
+          <h2 className="shrink-0 text-[15px] font-semibold tracking-tight text-ink">Stadiums</h2>
+          <span className="rule" />
+          <span className="tnum shrink-0 text-sm text-muted">{venues.length} visited</span>
         </div>
 
         <div className="overflow-hidden rounded-lg border border-border bg-surface p-3 sm:p-5">
@@ -102,13 +101,13 @@ function VenueRow({ v }: { v: VenueVisit }) {
       <div className="ml-auto flex items-baseline gap-4 text-right">
         <div>
           <div className="tnum text-lg font-semibold leading-none">{v.games}</div>
-          <div className="text-[10px] uppercase tracking-wide text-faint">games</div>
+          <div className="text-[10px] text-faint">games</div>
         </div>
         <div className="hidden sm:block">
           <div className="tnum text-xs text-muted">
             {v.firstVisit === v.lastVisit ? v.firstVisit : `${v.firstVisit} → ${v.lastVisit}`}
           </div>
-          <div className="text-[10px] uppercase tracking-wide text-faint">
+          <div className="text-[10px] text-faint">
             {v.firstVisit === v.lastVisit ? "visit" : "first → last"}
           </div>
         </div>

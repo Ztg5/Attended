@@ -121,9 +121,11 @@ mono vs serif — never two similar sans).
 - **Geist Mono** — the command-center voice: **all scores, big stat numerals, streak
   counts, W/L records, dates in tables.** Always `font-variant-numeric: tabular-nums`.
   This is what makes figures line up and read like a scoreboard/terminal readout.
-- **Newsreader (serif)** — reserved for **personal game notes** (the memories) and any
-  editorial pull-quote. Maps "the memory survives the metric" literally into type.
-  `text-wrap: pretty` for prose.
+- **Newsreader (serif) = the writer's voice.** Primary home is **personal game notes**
+  (`.note`, the memories). Extended — deliberately — to **section standfirsts / hints**
+  (`.standfirst`, italic) and short editorial asides ("Games by league —", "Also attended
+  by"). Same voice, whether it's the beat writer narrating a section or you narrating a
+  game. Never used for UI chrome, labels, controls, or data. `text-wrap: pretty` for prose.
 - Body line length capped 65–75ch. Display/hero numerals may go large but headings
   `clamp()` max ≤ 5rem. No gradient text, ever.
 
@@ -213,11 +215,35 @@ Purposeful and restrained — a command center, not a toy. Every animation has a
 
 ---
 
+## The signature layer (almanac / box-score voice)
+
+The bones are neutral; personality comes from an editorial layer that makes the app read
+as a **beat-writer's box-score almanac** rather than a generic dashboard. Three parts,
+all in `globals.css` (`@layer components`):
+
+- **Nameplate** (`.nameplate`) — the publication title. Geist Sans **800**,
+  `letter-spacing: -0.035em`, ~2–2.75rem. Every page opens with one (via `PageMasthead`);
+  the dashboard and sign-in set it largest. Reads as a sports-section front page, not an
+  app header.
+- **Ledger rule** (`.rule-ledger`) — the app's signature divider: a 2px `--ink` hairline
+  over a 1px `--border` hairline with a gap between (the newspaper / box-score double
+  rule). Sits under every masthead. Used sparingly — it's the one loud line on the page.
+- **Editorial section header** (`.section-head` + `SectionHeader`) — replaces the old
+  `uppercase tracking-wide text-muted` eyebrow (which had metastasized onto every section
+  and read as pure AI grammar). Title Case label in `--ink`, an optional serif-italic
+  `.standfirst`, and a hairline `--border` rule that runs out to the row's action.
+  **No uppercase-tracked eyebrows.** Acronym labels (league codes: NFL, MLB) and dense
+  data-table column headers stay uppercase — those are data, not eyebrows.
+
+Reusable pieces: `PageMasthead` (nameplate + standfirst + ledger rule), `SectionHeader`
+(the editorial header). Use them instead of hand-rolling a bold `h1` or a muted-caps `h2`.
+
 ## Component patterns
 
-- **Headline stat** — mono numeral + sans label + optional delta; used in the top
-  dashboard band. Not the gradient hero-metric cliché: flat, tabular, aligned to a
-  baseline grid, separated by rules not boxes.
+- **Headline stat** — mono numeral + sans label; the dashboard band is a **scoreboard
+  strip** (hairline-separated readouts), with the record leading as the tinted anchor
+  cell. Not the gradient hero-metric cliché, and not six identical SaaS stat cards: flat,
+  tabular, one cell weighted, the rest linking out.
 - **Game row** — date (mono) · matchup (sans, team chips) · score (mono, winner
   emphasized) · venue · a note indicator (serif snippet on expand). Expands in place to
   reveal the full serif note, line score, and details.

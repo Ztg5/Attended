@@ -34,7 +34,7 @@ export interface GameVM {
 
 const inputCls =
   "rounded border border-border bg-bg px-2.5 py-1.5 text-sm text-ink outline-none focus:border-primary";
-const labelCls = "text-xs font-medium uppercase tracking-wide text-muted";
+const labelCls = "text-xs font-medium text-muted";
 
 export function ReviewGame({ game, teams }: { game: GameVM; teams: TeamOpt[] }) {
   const [date, setDate] = useState(game.date);

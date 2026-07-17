@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Search, Users, Inbox } from "lucide-react";
+import { Search, Inbox } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { requireUserId } from "@/lib/session";
 import { getIncomingRequests, getOutgoingRequests, getFriends, searchUsers, type UserLite } from "@/lib/social";
 import { FriendButton, type FriendStatus } from "@/components/FriendButton";
@@ -25,12 +26,10 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         <BackLink />
       </div>
 
-      <header className="mb-6">
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight">
-          <Users size={24} className="text-primary" /> People
-        </h1>
-        <p className="mt-1 text-sm text-muted">Find friends by username and compare the games you&apos;ve seen.</p>
-      </header>
+      <PageMasthead
+        title="People"
+        subtitle="Find friends by username and compare the games you've seen."
+      />
 
       {/* Search (GET form) */}
       <form method="get" className="mb-6">
@@ -81,9 +80,12 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
 function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="mt-6">
-      <h2 className="mb-2.5 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-        {icon}
-        {title}
+      <h2 className="section-head mb-3">
+        <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
+          {icon && <span className="text-faint">{icon}</span>}
+          {title}
+        </span>
+        <span className="rule" />
       </h2>
       <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">{children}</div>
     </section>

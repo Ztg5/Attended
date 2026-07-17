@@ -155,7 +155,7 @@ export function ScheduleForm({ teamsByLeague }: { teamsByLeague: Record<string, 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
       <div>
-        <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted">League</span>
+        <span className="mb-1.5 block text-xs font-medium text-muted">League</span>
         <div className="flex gap-1 rounded-lg border border-border bg-bg p-1">
           {LEAGUES.map((l) => (
             <button
@@ -174,7 +174,7 @@ export function ScheduleForm({ teamsByLeague }: { teamsByLeague: Record<string, 
       <TeamPicker label="Team" teams={teams} value={teamId} onChange={setTeamId} />
 
       <label className="flex flex-col gap-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-muted">Season</span>
+        <span className="text-xs font-medium text-muted">Season</span>
         <select
           value={season}
           onChange={(e) => setSeason(Number(e.target.value))}

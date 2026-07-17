@@ -53,7 +53,7 @@ export function TeamPicker({
 
   return (
     <div className="flex flex-col gap-1" ref={ref}>
-      <span className="text-xs font-medium uppercase tracking-wide text-muted">{label}</span>
+      <span className="text-xs font-medium text-muted">{label}</span>
       <div className="relative">
         <button
           type="button"

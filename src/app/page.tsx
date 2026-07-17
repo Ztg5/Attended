@@ -10,6 +10,7 @@ import { GameRow } from "@/components/GameRow";
 import { PendingRefresh } from "@/components/PendingRefresh";
 import { RecordsCarousel } from "@/components/RecordsCarousel";
 import { FavoritePrompt } from "@/components/FavoritePrompt";
+import { SectionHeader } from "@/components/SectionHeader";
 
 // Render on demand (not prerendered at build) so deploys never depend on the DB
 // being reachable. Queries are trimmed (see stats.ts) so per-request cost is small.
@@ -29,15 +30,16 @@ export default async function Home() {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
-      {/* Masthead */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Attended</h1>
-          <p className="mt-1 text-sm text-muted">
-            Every professional sporting event I&apos;ve attended.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Masthead — publication nameplate over the ledger rule. */}
+      <header className="mb-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="nameplate text-[2.5rem] leading-[0.95] sm:text-[2.75rem]">Attended</h1>
+            <p className="standfirst mt-2 text-[15px] leading-snug text-muted">
+              Every professional sporting event I&apos;ve attended.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
           {needsReview > 0 && (
             <ButtonLink href="/review" variant="secondary">
               <ClipboardCheck size={15} style={{ color: "var(--review)" }} />
@@ -62,23 +64,27 @@ export default async function Home() {
             <PlusCircle size={15} /> Log a game
           </ButtonLink>
           <UserMenu />
+          </div>
         </div>
-      </div>
+        <hr className="rule-ledger mt-5" />
+      </header>
 
       {pendingCount > 0 && <PendingRefresh count={pendingCount} />}
 
       {d.totalGames > 0 && d.favoritesCount === 0 && <FavoritePrompt />}
 
-      {/* Headline band — every box links somewhere except the record. */}
+      {/* Headline band — a scoreboard strip. The record leads (the anchor);
+          the rest are hairline-separated readouts that each link out. */}
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3 lg:grid-cols-6">
+        <Stat label="Record attending" value={rec(d.overall.wins, d.overall.losses, d.overall.ties)} sub={`${pct(d.overall.wins, d.overall.losses)}% W`} anchor />
         <Stat label="Games" value={d.totalGames} href="/games" />
-        <Stat label="Record attending" value={rec(d.overall.wins, d.overall.losses, d.overall.ties)} sub={`${pct(d.overall.wins, d.overall.losses)}% W`} />
         <Stat label="Venues" value={d.venuesVisited} href="/collection#stadiums" />
         <Stat label="Playoff games" value={d.playoffCount} href="/games?filter=playoffs" />
         <Stat label="Win streak" value={d.currentWinStreak} icon={<Flame size={14} />} sub="current" href="/games?streak=current" />
         <Stat label="Longest streak" value={d.longestWinStreak} sub="wins in a row" href="/games?streak=longest" />
       </section>
-      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 px-1 text-xs text-muted">
+      <p className="mt-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 px-1 text-xs text-muted">
+        <span className="standfirst italic text-faint">Games by league —</span>
         {d.perLeague.map((l) => (
           <span key={l.code}>
             <span className="font-medium text-ink">{l.code}</span>{" "}
@@ -122,7 +128,7 @@ export default async function Home() {
       </Section>
 
       {/* Personal records — carousel: first games, then per-league records. */}
-      <section className="mt-8">
+      <section className="mt-9">
         <RecordsCarousel firstByLeague={d.records.firstByLeague} perLeague={d.records.perLeague} />
       </section>
 
@@ -151,24 +157,28 @@ function Stat({
   sub,
   icon,
   href,
+  anchor = false,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   icon?: React.ReactNode;
   href?: string;
+  anchor?: boolean;
 }) {
   const inner = (
     <>
       <div className="flex items-baseline gap-1.5">
-        <span className="tnum text-2xl font-semibold leading-none">{value}</span>
+        <span className={`tnum font-semibold leading-none ${anchor ? "text-[1.75rem]" : "text-2xl"}`}>
+          {value}
+        </span>
         {icon && <span className="text-faint">{icon}</span>}
       </div>
-      <div className="mt-1.5 text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1.5 text-[11px] font-medium text-muted">{label}</div>
       {sub && <div className="tnum text-[11px] text-faint">{sub}</div>}
     </>
   );
-  const cls = "bg-bg px-4 py-3.5";
+  const cls = `px-4 py-3.5 ${anchor ? "bg-primary-weak" : "bg-bg"}`;
   return href ? (
     <Link href={href} className={`${cls} block transition-colors hover:bg-surface`}>
       {inner}
@@ -190,14 +200,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-8">
-      <div className="mb-2.5 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-          {title}
-          {hint && <span className="ml-2 font-normal normal-case tracking-normal text-faint">{hint}</span>}
-        </h2>
-        {action}
-      </div>
+    <section className="mt-9">
+      <SectionHeader title={title} hint={hint} action={action} />
       {children}
     </section>
   );

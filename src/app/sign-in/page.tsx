@@ -19,8 +19,11 @@ export default async function SignInPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Attended</h1>
-        <p className="mt-1 text-sm text-muted">Track every game you&apos;ve been to. Sign in to start.</p>
+        <h1 className="nameplate text-[2.75rem] leading-none">Attended</h1>
+        <hr className="rule-ledger mt-3" />
+        <p className="standfirst mt-3 text-[15px] leading-snug text-muted">
+          A personal almanac of every game you&apos;ve been to. Sign in to start yours.
+        </p>
       </div>
 
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">

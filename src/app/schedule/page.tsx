@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { ScheduleForm } from "./ScheduleForm";
 import type { TeamOpt } from "@/components/TeamPicker";
 
@@ -33,12 +34,10 @@ export default async function SchedulePage() {
         <BackLink />
       </div>
 
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Schedule</h1>
-        <p className="mt-1 text-sm text-muted">
-          Pick a team and season, then check off every game you attended to add them all at once.
-        </p>
-      </header>
+      <PageMasthead
+        title="Schedule"
+        subtitle="Pick a team and season, then check off every game you attended to add them all at once."
+      />
 
       <ScheduleForm teamsByLeague={teamsByLeague} />
     </main>

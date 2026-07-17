@@ -2,6 +2,7 @@ import { ClipboardCheck } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { ReviewGame, type GameVM, type TeamOpt } from "./ReviewGame";
 
 export const dynamic = "force-dynamic"; // always reflect the latest DB state
@@ -51,23 +52,20 @@ export default async function ReviewPage() {
         <BackLink />
       </div>
 
-      <header className="mb-6">
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold">
-          <ClipboardCheck size={24} className="text-primary" />
-          Review
-        </h1>
-        <p className="mt-1.5 text-muted">
-          {games.length > 0 ? (
+      <PageMasthead
+        title="Review"
+        subtitle={
+          games.length > 0 ? (
             <>
-              <span className="tnum font-medium text-ink">{games.length}</span> game
+              <span className="tnum font-medium not-italic text-ink">{games.length}</span> game
               {games.length === 1 ? "" : "s"} flagged during import. Confirm or fix each, then
               mark it reviewed.
             </>
           ) : (
             "Nothing to review — every game is confirmed."
-          )}
-        </p>
-      </header>
+          )
+        }
+      />
 
       {games.length === 0 ? (
         <div className="rounded-lg border border-border bg-surface px-5 py-12 text-center text-muted">

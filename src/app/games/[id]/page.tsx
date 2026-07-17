@@ -121,7 +121,7 @@ export default async function GameDetailPage({ params }: { params: Promise<{ id:
       {alsoAttended.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-border bg-surface px-5 py-3 text-sm text-muted">
           <UsersRound size={14} className="text-faint" />
-          <span className="text-xs font-medium uppercase tracking-wide text-faint">Also attended by</span>
+          <span className="standfirst text-sm italic text-faint">Also attended by</span>
           {alsoAttended.map((a, i) => (
             <span key={i} className="font-medium text-ink">
               {a.username ? (
@@ -190,9 +190,12 @@ function TeamSide({
 
 function SectionHeading({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
   return (
-    <h2 className="mb-2.5 mt-8 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-      {icon}
-      {children}
+    <h2 className="section-head mb-3 mt-8">
+      <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
+        <span className="text-faint">{icon}</span>
+        {children}
+      </span>
+      <span className="rule" />
     </h2>
   );
 }

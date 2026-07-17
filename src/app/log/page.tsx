@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 import { LogTabs } from "./LogTabs";
 import type { ScheduleTeamOpt } from "../schedule/page";
 
@@ -29,12 +30,10 @@ export default async function LogPage() {
         <BackLink />
       </div>
 
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">Add games</h1>
-        <p className="mt-1 text-sm text-muted">
-          Two ways to add games you&apos;ve been to — one at a time, or a whole team&apos;s season at once.
-        </p>
-      </header>
+      <PageMasthead
+        title="Add games"
+        subtitle="Two ways to add games you've been to — one at a time, or a whole team's season at once."
+      />
 
       <LogTabs teamsByLeague={teamsByLeague} />
     </main>

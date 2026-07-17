@@ -29,7 +29,7 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       <header className="mt-4 flex items-center gap-4 rounded-lg border border-border bg-surface px-5 py-5">
         <PlayerHeadshot url={p.headshotUrl} name={p.name} size={64} />
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight">{p.name}</h1>
+          <h1 className="nameplate text-[1.75rem] leading-none">{p.name}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted">
             {p.position && <span>{p.position}</span>}
             <span>
@@ -57,8 +57,11 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
       {/* Career totals across attended games */}
       {p.totals.length > 0 && (
         <section className="mt-6">
-          <h2 className="mb-2.5 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted">
-            <TrendingUp size={15} /> Totals in games you attended
+          <h2 className="section-head mb-3">
+            <span className="flex shrink-0 items-center gap-2 text-[15px] font-semibold text-ink">
+              <TrendingUp size={15} className="text-faint" /> Totals in games you attended
+            </span>
+            <span className="rule" />
           </h2>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
             {p.totals.map((t) => (
@@ -73,7 +76,10 @@ export default async function PlayerPage({ params }: { params: Promise<{ id: str
 
       {/* Games seen */}
       <section className="mt-8">
-        <h2 className="mb-2.5 text-sm font-semibold uppercase tracking-wide text-muted">Games you saw them</h2>
+        <h2 className="section-head mb-3">
+          <span className="shrink-0 text-[15px] font-semibold text-ink">Games you saw them</span>
+          <span className="rule" />
+        </h2>
         <div className="overflow-hidden rounded-lg border border-border bg-surface">
           {p.games.map((g) => {
             const entries = headlineStats(g.leagueCode, g.stats);

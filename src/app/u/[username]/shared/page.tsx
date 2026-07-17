@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Users } from "lucide-react";
 import { requireUserId } from "@/lib/session";
 import { getSharedGamesView } from "@/lib/social";
 import { GameLine } from "@/components/GameLine";
 import { BackLink } from "@/components/BackLink";
+import { PageMasthead } from "@/components/PageMasthead";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +25,11 @@ export default async function SharedGamesPage({ params }: { params: Promise<{ us
         <BackLink fallback={`/u/${view.target.username}`} />
       </div>
 
-      <header className="mb-6 mt-4">
-        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight">
-          <Users size={24} className="text-primary" /> Games you both attended
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          Every game you and {display} were both at.
-        </p>
-      </header>
+      <PageMasthead
+        title="Games you both attended"
+        subtitle={`Every game you and ${display} were both at.`}
+        className="mb-6 mt-4"
+      />
 
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
         <Stat label="Shared games" value={view.games.length} />
@@ -56,7 +53,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-bg px-4 py-3.5">
       <div className="tnum text-2xl font-semibold leading-none">{value}</div>
-      <div className="mt-1.5 text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1.5 text-[11px] font-medium text-muted">{label}</div>
     </div>
   );
 }

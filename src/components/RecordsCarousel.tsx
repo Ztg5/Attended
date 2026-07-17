@@ -54,10 +54,11 @@ export function RecordsCarousel({
 
   return (
     <div>
-      <div className="mb-2.5 flex items-center justify-between">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{page.title}</h2>
+      <div className="section-head mb-3">
+        <h2 className="shrink-0 text-[15px] font-semibold tracking-tight text-ink">{page.title}</h2>
+        <span className="rule" />
         {pages.length > 1 && (
-          <div className="flex items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">
             <button onClick={() => go(-1)} aria-label="Previous" className="rounded-md border border-border bg-surface p-1 text-muted transition-colors hover:text-ink">
               <ChevronLeft size={16} />
             </button>
@@ -81,8 +82,8 @@ export function RecordsCarousel({
 function RecordCard({ card }: { card: Card }) {
   const inner = (
     <>
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted">
-        {card.icon}
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted">
+        {card.icon && <span className="text-faint">{card.icon}</span>}
         {card.label}
       </div>
       {card.game ? (
