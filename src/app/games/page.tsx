@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getAllGames, getTeamGames, getStreakGames, type GameLite } from "@/lib/stats";
 import { requireUserId } from "@/lib/session";
@@ -37,6 +38,7 @@ export default async function GamesPage({
   }
 
   const leagues = [...new Set(games.map((g) => g.leagueCode))].sort();
+  const filtered = Boolean(teamId || sp.filter || sp.streak);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
@@ -47,8 +49,24 @@ export default async function GamesPage({
       <PageMasthead title={title} />
 
       {games.length === 0 ? (
+        // "Nothing logged ever" and "nothing matches this view" are very different
+        // situations — the first needs a way in, the second a way back out.
         <div className="rounded-lg border border-border bg-surface px-4 py-10 text-center text-sm text-muted">
-          No games here yet.
+          {filtered ? (
+            <>
+              No games match this view.{" "}
+              <Link href="/games" className="font-medium text-primary hover:text-primary-hover">
+                See the full log
+              </Link>
+            </>
+          ) : (
+            <>
+              You haven&apos;t logged a game yet.{" "}
+              <Link href="/log" className="font-medium text-primary hover:text-primary-hover">
+                Add your first one
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <GameLog games={games} leagues={leagues} />

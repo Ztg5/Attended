@@ -121,7 +121,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="bg-bg px-4 py-3.5">
       <div className="tnum text-2xl font-semibold leading-none">{value}</div>
-      <div className="mt-1.5 text-[11px] font-medium text-muted">{label}</div>
+      <div className="mt-1.5 text-xs font-medium text-muted">{label}</div>
     </div>
   );
 }

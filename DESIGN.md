@@ -1,9 +1,10 @@
 # Design
 
 Visual system for **Attended** — a personal stats command center for every pro
-sporting event attended. Register: **product**. Light-first, with a fully designed dark
-mode. The guiding idea: **the interface is near-neutral so that every saturated color
-carries data meaning** — a team, a result, a milestone. Color is a channel, not decor.
+sporting event attended. Register: **product**. **Light only** — the dark theme was
+removed; `globals.css` ships no dark tokens and sets `color-scheme: light`. The guiding
+idea: **the interface is near-neutral so that every saturated color carries data
+meaning** — a team, a result, a milestone. Color is a channel, not decor.
 
 Reference DNA: **Letterboxd** (personal log, collection grids, per-entry notes) +
 **The Athletic / FiveThirtyEight** (editorial sports data-viz, confident figures,
@@ -133,11 +134,12 @@ mono vs serif — never two similar sans).
 
 | Role | Family | Size / weight |
 |---|---|---|
-| Hero record numeral | mono | `clamp(2.5rem, 6vw, 4.5rem)` / 600, tabular |
-| Page title | sans | 1.75rem / 700 / -0.02em |
-| Section title | sans | 1.125rem / 600 |
-| Stat value | mono | 1.5rem / 600 / tabular |
-| Stat label | sans | 0.8125rem / 500 / `--muted`, `letter-spacing: 0.01em` |
+| Nameplate — dashboard / sign-in | sans | 2.5–2.75rem / 800 / -0.035em (`.nameplate`) |
+| Nameplate — sub-page | sans | 2rem / 800 / -0.035em (`.nameplate`, via `PageMasthead`) |
+| Standfirst | serif italic | 0.9375rem / 400 / `--muted` (`.standfirst`) — used sparingly, not on every page |
+| Section title | sans | 0.9375rem / 600 / `--ink` (`.section-head`) — Title Case, never uppercase-tracked |
+| Stat value | mono | 1.5rem / 600 / tabular · anchor (the record) 1.875rem |
+| Stat label | sans | 0.75rem / 500 · `--muted`, or `--ink` on the anchor. No tracking, no uppercase |
 | Table cell | sans (num cols mono) | 0.875rem / 400 |
 | Body / note | serif | 1rem / 400 / 1.6 line-height |
 

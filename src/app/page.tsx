@@ -141,34 +141,35 @@ export default async function Home() {
   );
 }
 
+/**
+ * One readout in the scoreboard strip. `anchor` marks the record — the strip's
+ * headline figure. Its emphasis is typographic (scale + ink label), never the
+ * cobalt accent: cobalt means "interactive" here, and the record is the one
+ * cell that doesn't link anywhere.
+ */
 function Stat({
   label,
   value,
   sub,
-  icon,
   href,
   anchor = false,
 }: {
   label: string;
   value: string | number;
   sub?: string;
-  icon?: React.ReactNode;
   href?: string;
   anchor?: boolean;
 }) {
   const inner = (
     <>
-      <div className="flex items-baseline gap-1.5">
-        <span className={`tnum font-semibold leading-none ${anchor ? "text-[1.75rem]" : "text-2xl"}`}>
-          {value}
-        </span>
-        {icon && <span className="text-faint">{icon}</span>}
-      </div>
-      <div className="mt-1.5 text-[11px] font-medium text-muted">{label}</div>
+      <span className={`tnum block font-semibold leading-none ${anchor ? "text-[1.875rem]" : "text-2xl"}`}>
+        {value}
+      </span>
+      <div className={`mt-1.5 text-xs font-medium ${anchor ? "text-ink" : "text-muted"}`}>{label}</div>
       {sub && <div className="tnum text-[11px] text-faint">{sub}</div>}
     </>
   );
-  const cls = `px-4 py-3.5 ${anchor ? "bg-primary-weak" : "bg-bg"}`;
+  const cls = "bg-bg px-4 py-3.5";
   return href ? (
     <Link href={href} className={`${cls} block transition-colors hover:bg-surface`}>
       {inner}
@@ -180,18 +181,16 @@ function Stat({
 
 function Section({
   title,
-  hint,
   action,
   children,
 }: {
   title: string;
-  hint?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <section className="mt-9">
-      <SectionHeader title={title} hint={hint} action={action} />
+      <SectionHeader title={title} action={action} />
       {children}
     </section>
   );

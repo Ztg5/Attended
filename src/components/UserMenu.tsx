@@ -18,6 +18,7 @@ export async function UserMenu() {
       <Link
         href={me?.username ? `/u/${me.username}` : "/choose-username"}
         title="Your profile"
+        aria-label={`Your profile (${label})`}
         className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-muted transition-colors hover:text-ink"
       >
         <UserRound size={15} />
@@ -32,9 +33,11 @@ export async function UserMenu() {
         <button
           type="submit"
           title="Sign out"
-          className="inline-flex items-center rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-muted transition-colors hover:text-ink"
+          aria-label="Sign out"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-muted transition-colors hover:text-ink"
         >
           <LogOut size={15} />
+          <span className="hidden sm:inline">Sign out</span>
         </button>
       </form>
     </div>
