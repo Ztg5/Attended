@@ -1,86 +1,102 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import { Check, Copy, Link2 } from "lucide-react";
-import { Button } from "@/components/Button";
+import { useState } from "react";
+import { Check, Share2, X } from "lucide-react";
 import { createShareLink, revokeShareLink } from "@/app/u/[username]/share-actions";
 
 /**
- * Share-link control, shown only on your own profile.
+ * Compact share control for your own profile header.
  *
- * The link is an unguessable token, so anyone holding it can see this profile's
- * highlights — the copy says so plainly rather than implying it's private.
+ * Uses the Web Share API so phones open the native share sheet (Messages,
+ * WhatsApp, AirDrop, socials). Desktop browsers mostly lack it, so those fall
+ * back to copying the link.
+ *
+ * Note on the first tap: iOS Safari only allows navigator.share() while the
+ * user gesture is still "active", and minting a token first costs an await.
+ * If that trips, we fall back to the clipboard — and because the token now
+ * exists, every later tap opens the sheet natively with no await at all.
  */
-export function ShareLink({ initialToken }: { initialToken: string | null }) {
+export function ShareLink({
+  initialToken,
+  displayName,
+}: {
+  initialToken: string | null;
+  displayName: string;
+}) {
   const [token, setToken] = useState(initialToken);
-  const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
-  const [pending, start] = useTransition();
+  const [busy, setBusy] = useState(false);
 
-  // Built client-side so the link matches whatever host they're actually on
-  // (localhost in dev, the real domain in production).
-  useEffect(() => setOrigin(window.location.origin), []);
-
-  const url = token ? `${origin}/s/${token}` : "";
-
-  function create() {
-    start(async () => setToken((await createShareLink()).token));
-  }
-  function revoke() {
-    start(async () => {
-      await revokeShareLink();
-      setToken(null);
-      setCopied(false);
-    });
-  }
-  async function copy() {
+  async function share() {
+    if (busy) return;
+    setBusy(true);
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard blocked — the input is selectable as a fallback */
+      let t = token;
+      if (!t) {
+        t = (await createShareLink()).token;
+        setToken(t);
+      }
+      const url = `${window.location.origin}/s/${t}`;
+      const data = {
+        title: `${displayName} on Attended`,
+        text: `Every game ${displayName} has been to.`,
+        url,
+      };
+
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try {
+          await navigator.share(data);
+          return;
+        } catch (err) {
+          // The user dismissing the sheet is not an error worth reacting to.
+          if ((err as Error)?.name === "AbortError") return;
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        /* clipboard blocked — nothing useful left to try */
+      }
+    } finally {
+      setBusy(false);
     }
   }
 
-  if (!token) {
-    return (
-      <div className="rounded-lg border border-border bg-surface px-4 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted">
-            Share a read-only view of your log — stats, teams and recent games. Your notes stay
-            private.
-          </p>
-          <Button variant="secondary" onClick={create} disabled={pending}>
-            <Link2 size={15} /> {pending ? "Creating…" : "Create share link"}
-          </Button>
-        </div>
-      </div>
-    );
+  async function revoke() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await revokeShareLink();
+      setToken(null);
+      setCopied(false);
+    } finally {
+      setBusy(false);
+    }
   }
 
+  const btn =
+    "inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-muted transition-colors hover:text-ink disabled:opacity-50";
+
   return (
-    <div className="rounded-lg border border-border bg-surface px-4 py-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          readOnly
-          value={url}
-          onFocus={(e) => e.currentTarget.select()}
-          aria-label="Your share link"
-          className="min-w-0 flex-1 rounded border border-border bg-bg px-2.5 py-1.5 text-sm text-muted outline-none focus:border-primary"
-        />
-        <Button variant="secondary" onClick={copy}>
-          {copied ? <Check size={15} /> : <Copy size={15} />}
-          {copied ? "Copied" : "Copy"}
-        </Button>
-        <Button variant="ghost" onClick={revoke} disabled={pending}>
-          {pending ? "Revoking…" : "Revoke"}
-        </Button>
-      </div>
-      <p className="mt-2 text-xs text-faint">
-        Anyone with this link can see your stats and recent games — but never your notes.
-        Revoking it breaks every copy you&apos;ve sent.
-      </p>
+    <div className="flex shrink-0 items-center gap-1.5">
+      <button onClick={share} disabled={busy} title="Share your log" aria-label="Share your log" className={btn}>
+        {copied ? <Check size={15} /> : <Share2 size={15} />}
+        <span className="hidden sm:inline">{copied ? "Copied" : "Share"}</span>
+      </button>
+      {token && (
+        <button
+          onClick={revoke}
+          disabled={busy}
+          title="Stop sharing — breaks every link you've sent"
+          aria-label="Stop sharing your log"
+          className={btn}
+        >
+          <X size={15} />
+        </button>
+      )}
     </div>
   );
 }

@@ -44,18 +44,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <h1 className="nameplate truncate text-[1.75rem] leading-none">{display}</h1>
           {user.name && user.username && <p className="text-sm text-muted">{user.name}</p>}
         </div>
-        {status !== "self" && <FriendButton targetId={user.id} status={status} size="md" />}
+        {status === "self" ? (
+          <ShareLink initialToken={shareToken} displayName={user.name ?? display} />
+        ) : (
+          <FriendButton targetId={user.id} status={status} size="md" />
+        )}
       </header>
-
-      {status === "self" && (
-        <section className="mt-6">
-          <div className="section-head mb-3">
-            <h2 className="shrink-0 text-[15px] font-semibold tracking-tight text-ink">Share your log</h2>
-            <span className="rule" />
-          </div>
-          <ShareLink initialToken={shareToken} />
-        </section>
-      )}
 
       {!full ? (
         <div className="mt-6 rounded-lg border border-border bg-surface px-5 py-10 text-center">
