@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { LogOut, UserRound } from "lucide-react";
-import { auth, signOut } from "@/auth";
+import { UserRound } from "lucide-react";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 
-/** Signed-in identity: link to own profile + sign-out, for the dashboard masthead. */
+/**
+ * Signed-in identity for the dashboard masthead — a link to your own profile.
+ * Sign-out lives on that profile page (top right), not here.
+ */
 export async function UserMenu() {
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -24,22 +27,6 @@ export async function UserMenu() {
         <UserRound size={15} />
         <span className="hidden max-w-[9rem] truncate sm:inline">{label}</span>
       </Link>
-      <form
-        action={async () => {
-          "use server";
-          await signOut({ redirectTo: "/sign-in" });
-        }}
-      >
-        <button
-          type="submit"
-          title="Sign out"
-          aria-label="Sign out"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-muted transition-colors hover:text-ink"
-        >
-          <LogOut size={15} />
-          <span className="hidden sm:inline">Sign out</span>
-        </button>
-      </form>
     </div>
   );
 }

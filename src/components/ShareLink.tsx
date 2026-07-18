@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Share2, X } from "lucide-react";
-import { createShareLink, revokeShareLink } from "@/app/u/[username]/share-actions";
+import { Check, Share2 } from "lucide-react";
+import { createShareLink } from "@/app/u/[username]/share-actions";
 
 /**
  * Compact share control for your own profile header.
@@ -65,38 +65,19 @@ export function ShareLink({
     }
   }
 
-  async function revoke() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await revokeShareLink();
-      setToken(null);
-      setCopied(false);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const btn =
     "inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm text-muted transition-colors hover:text-ink disabled:opacity-50";
 
   return (
-    <div className="flex shrink-0 items-center gap-1.5">
-      <button onClick={share} disabled={busy} title="Share your log" aria-label="Share your log" className={btn}>
-        {copied ? <Check size={15} /> : <Share2 size={15} />}
-        <span className="hidden sm:inline">{copied ? "Copied" : "Share"}</span>
-      </button>
-      {token && (
-        <button
-          onClick={revoke}
-          disabled={busy}
-          title="Stop sharing — breaks every link you've sent"
-          aria-label="Stop sharing your log"
-          className={btn}
-        >
-          <X size={15} />
-        </button>
-      )}
-    </div>
+    <button
+      onClick={share}
+      disabled={busy}
+      title="Share your log"
+      aria-label="Share your log"
+      className={`shrink-0 ${btn}`}
+    >
+      {copied ? <Check size={15} /> : <Share2 size={15} />}
+      <span className="hidden sm:inline">{copied ? "Copied" : "Share"}</span>
+    </button>
   );
 }

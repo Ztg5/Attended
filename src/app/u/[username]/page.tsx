@@ -8,6 +8,7 @@ import { GameLine } from "@/components/GameLine";
 import { FriendButton } from "@/components/FriendButton";
 import { BackLink } from "@/components/BackLink";
 import { ShareLink } from "@/components/ShareLink";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <div className="mb-1 flex items-center justify-between">
         <BackLink fallback="/people" />
+        {status === "self" && <SignOutButton />}
       </div>
 
       {/* Header */}

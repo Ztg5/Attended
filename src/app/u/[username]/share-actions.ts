@@ -26,13 +26,3 @@ export async function createShareLink(): Promise<{ token: string }> {
   return { token };
 }
 
-export async function revokeShareLink(): Promise<{ ok: true }> {
-  const userId = await requireUserId();
-  const me = await prisma.user.update({
-    where: { id: userId },
-    data: { shareToken: null },
-    select: { username: true },
-  });
-  if (me.username) revalidatePath(`/u/${me.username}`);
-  return { ok: true };
-}
