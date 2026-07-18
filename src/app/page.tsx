@@ -97,7 +97,7 @@ export default async function Home() {
           <div className="divide-y divide-border rounded-lg border border-border bg-surface">
             {d.followed.map((f) => (
               <Link key={f.team.id} href={`/games?team=${f.team.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2">
-                <TeamLogo url={f.team.logoUrl} alt={f.team.name} size={30} />
+                <TeamLogo url={f.team.logoUrl} alt={f.team.name} size={30} ringColor={f.team.primaryColor} />
                 <span className="font-medium">{f.team.name}</span>
                 <span className="ml-auto flex items-baseline gap-3">
                   <span className="tnum text-lg font-semibold">{rec(f.wins, f.losses, f.ties)}</span>
