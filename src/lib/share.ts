@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
-import { getPublicDashboard, type DashboardData } from "@/lib/stats";
+import { getPublicDashboard, getBannerTeam, type DashboardData, type TeamLite } from "@/lib/stats";
 import { getChecklist } from "@/lib/collection";
 import type { CollectionPreview } from "@/lib/social";
 
@@ -26,6 +26,8 @@ export interface ShareView {
   user: { username: string | null; name: string | null; image: string | null };
   dashboard: DashboardData;
   collection: CollectionPreview[];
+  /** Most-seen favorite team — drives the Zubaz banner. */
+  bannerTeam: TeamLite | null;
 }
 
 /**
@@ -44,14 +46,16 @@ export const getShareView = cache(async (token: string): Promise<ShareView | nul
   });
   if (!user) return null;
 
-  const [dashboard, checklist] = await Promise.all([
+  const [dashboard, checklist, bannerTeam] = await Promise.all([
     getPublicDashboard(user.id),
     getChecklist(user.id),
+    getBannerTeam(user.id),
   ]);
 
   return {
     user: { username: user.username, name: user.name, image: user.image },
     dashboard,
     collection: checklist.map((l) => ({ code: l.code, seen: l.seen, total: l.total })),
+    bannerTeam,
   };
 });

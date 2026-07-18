@@ -132,6 +132,9 @@ model Team {
   abbreviation String // "BUF"
   logoUrl      String?
   primaryColor String? // hex, no leading '#'
+  // ESPN's alternateColor. Pairs with primaryColor for the Zubaz profile banner —
+  // the pair is what makes teams distinguishable (primaries cluster in navy/black).
+  secondaryColor String? // hex, no leading '#'
   active       Boolean @default(true)
 
   homeGames   Game[]       @relation("HomeTeam")

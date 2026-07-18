@@ -4,7 +4,9 @@ import { Users, Lock, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { getProfile } from "@/lib/social";
+import { getBannerTeam } from "@/lib/stats";
 import { GameLine } from "@/components/GameLine";
+import { ZubazBanner } from "@/components/ZubazBanner";
 import { FriendButton } from "@/components/FriendButton";
 import { BackLink } from "@/components/BackLink";
 import { ShareLink } from "@/components/ShareLink";
@@ -23,6 +25,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const { user, status, full } = profile;
   const display = user.username ? `@${user.username}` : user.name ?? "User";
 
+  // Gated behind `full` so a locked profile doesn't hint at their team.
+  const bannerTeam = full ? await getBannerTeam(user.id) : null;
+
   // Only your own share token is ever read — never another user's.
   const shareToken =
     status === "self"
@@ -37,8 +42,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         {status === "self" && <SignOutButton />}
       </div>
 
-      {/* Header */}
-      <header className="mt-4 flex items-center gap-4 rounded-lg border border-border bg-surface px-5 py-5">
+      {/* Header — Zubaz band in the colors of the team they've seen most. */}
+      <header className="mt-4 overflow-hidden rounded-lg border border-border bg-surface">
+        {bannerTeam && (
+          <ZubazBanner primary={bannerTeam.primaryColor} secondary={bannerTeam.secondaryColor} />
+        )}
+        <div className="flex items-center gap-4 px-5 py-5">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xl font-semibold text-muted">
           {(user.username ?? user.name ?? "?").slice(0, 1).toUpperCase()}
         </div>
@@ -51,6 +60,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         ) : (
           <FriendButton targetId={user.id} status={status} size="md" />
         )}
+        </div>
       </header>
 
       {!full ? (

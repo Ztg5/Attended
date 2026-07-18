@@ -22,6 +22,7 @@ export interface TeamLite {
   abbreviation: string;
   logoUrl: string | null;
   primaryColor: string | null;
+  secondaryColor: string | null;
 }
 
 export interface GameLite {
@@ -91,6 +92,7 @@ export function toLite(g: any): GameLite {
           abbreviation: tm.abbreviation,
           logoUrl: tm.logoUrl,
           primaryColor: tm.primaryColor,
+          secondaryColor: tm.secondaryColor ?? null,
         }
       : null;
   return {
@@ -123,6 +125,7 @@ export const teamSelect = {
   abbreviation: true,
   logoUrl: true,
   primaryColor: true,
+  secondaryColor: true,
 } as const;
 
 // Everything a GameLite needs EXCEPT the per-user note (and never detailsJson). Reused
@@ -229,13 +232,33 @@ export async function getUserGameSummary(userId: string) {
 async function followedTeamsOf(userId: string): Promise<TeamLite[]> {
   const favUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      favoriteTeams: {
-        select: { id: true, nickname: true, name: true, abbreviation: true, logoUrl: true, primaryColor: true },
-      },
-    },
+    select: { favoriteTeams: { select: teamSelect } },
   });
   return favUser?.favoriteTeams ?? [];
+}
+
+/**
+ * The favorite team this user has actually seen most — drives the Zubaz banner
+ * on their profile. Falls back to their first favorite when nothing is attended
+ * yet, and to null when they've picked no teams at all.
+ */
+export async function getBannerTeam(userId: string): Promise<TeamLite | null> {
+  const teams = await followedTeamsOf(userId);
+  if (teams.length === 0) return null;
+
+  // Deliberately light: just the two team ids per attended game, no joins.
+  const games = await prisma.game.findMany({
+    where: attendedByUser(userId),
+    select: { homeTeamId: true, awayTeamId: true },
+  });
+
+  const seen = new Map<number, number>();
+  for (const g of games) {
+    for (const id of [g.homeTeamId, g.awayTeamId]) {
+      if (id != null) seen.set(id, (seen.get(id) ?? 0) + 1);
+    }
+  }
+  return [...teams].sort((a, b) => (seen.get(b.id) ?? 0) - (seen.get(a.id) ?? 0))[0] ?? null;
 }
 
 export async function getDashboard(userId: string): Promise<DashboardData> {

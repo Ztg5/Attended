@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getShareView } from "@/lib/share";
 import { TeamLogo } from "@/components/TeamLogo";
 import { GameLine } from "@/components/GameLine";
+import { ZubazBanner } from "@/components/ZubazBanner";
 import { ButtonLink } from "@/components/Button";
 import { stateAbbr } from "@/lib/us-states";
 
@@ -45,7 +46,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   // can't learn whether a token ever existed.
   if (!view) notFound();
 
-  const { user, dashboard: d, collection } = view;
+  const { user, dashboard: d, collection, bannerTeam } = view;
   const display = user.name ?? (user.username ? `@${user.username}` : "A fan");
   const rec = (w: number, l: number, t: number) => (t > 0 ? `${w}–${l}–${t}` : `${w}–${l}`);
   const pct = (w: number, l: number) => (w + l ? Math.round((w / (w + l)) * 100) : 0);
@@ -62,6 +63,14 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
           </ButtonLink>
         </div>
       </div>
+
+      {bannerTeam && (
+        <ZubazBanner
+          primary={bannerTeam.primaryColor}
+          secondary={bannerTeam.secondaryColor}
+          height={72}
+        />
+      )}
 
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
         <header className="mb-8">

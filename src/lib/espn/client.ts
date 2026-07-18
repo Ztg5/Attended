@@ -69,6 +69,7 @@ export interface EspnTeam {
   abbreviation: string;
   logoUrl: string | null;
   primaryColor: string | null;
+  secondaryColor: string | null;
   active: boolean;
 }
 
@@ -121,6 +122,7 @@ export async function fetchTeams(league: LeagueCode): Promise<EspnTeam[]> {
       abbreviation: t.abbreviation,
       logoUrl: logo,
       primaryColor: t.color ?? null,
+      secondaryColor: t.alternateColor ?? null,
       active: t.isActive !== false,
     };
   });
