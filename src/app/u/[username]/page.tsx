@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Users, Lock, ArrowRight } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { requireUserId } from "@/lib/session";
 import { getProfile } from "@/lib/social";
 import { GameLine } from "@/components/GameLine";
 import { FriendButton } from "@/components/FriendButton";
 import { BackLink } from "@/components/BackLink";
+import { ShareLink } from "@/components/ShareLink";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   const { user, status, full } = profile;
   const display = user.username ? `@${user.username}` : user.name ?? "User";
+
+  // Only your own share token is ever read — never another user's.
+  const shareToken =
+    status === "self"
+      ? (await prisma.user.findUnique({ where: { id: viewerId }, select: { shareToken: true } }))
+          ?.shareToken ?? null
+      : null;
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
@@ -37,6 +46,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         </div>
         {status !== "self" && <FriendButton targetId={user.id} status={status} size="md" />}
       </header>
+
+      {status === "self" && (
+        <section className="mt-6">
+          <div className="section-head mb-3">
+            <h2 className="shrink-0 text-[15px] font-semibold tracking-tight text-ink">Share your log</h2>
+            <span className="rule" />
+          </div>
+          <ShareLink initialToken={shareToken} />
+        </section>
+      )}
 
       {!full ? (
         <div className="mt-6 rounded-lg border border-border bg-surface px-5 py-10 text-center">

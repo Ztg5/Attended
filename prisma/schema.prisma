@@ -24,6 +24,11 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
 
+  // Unguessable public-share token. Null = profile is private (the default).
+  // Set by "share my profile", cleared by revoking. Anyone holding the token can
+  // read this user's dashboard highlights at /s/<token> — never their notes.
+  shareToken String? @unique
+
   accounts    Account[]
   sessions    Session[]
   attendances Attendance[]

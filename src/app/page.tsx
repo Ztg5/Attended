@@ -10,6 +10,7 @@ import { PendingRefresh } from "@/components/PendingRefresh";
 import { RecordsCarousel } from "@/components/RecordsCarousel";
 import { FavoritePrompt } from "@/components/FavoritePrompt";
 import { SectionHeader } from "@/components/SectionHeader";
+import { FirstRun } from "@/components/FirstRun";
 
 // Render on demand (not prerendered at build) so deploys never depend on the DB
 // being reachable. Queries are trimmed (see stats.ts) so per-request cost is small.
@@ -63,7 +64,13 @@ export default async function Home() {
 
       {pendingCount > 0 && <PendingRefresh count={pendingCount} />}
 
-      {d.totalGames > 0 && d.favoritesCount === 0 && <FavoritePrompt />}
+      {/* Nothing logged yet — the whole dashboard would be zeros and empty
+          boxes, so hand the screen to onboarding instead. */}
+      {d.totalGames === 0 ? (
+        <FirstRun teams={d.followed.map((f) => f.team)} />
+      ) : (
+        <>
+      {d.favoritesCount === 0 && <FavoritePrompt />}
 
       {/* Headline band — a scoreboard strip. The record leads (the anchor);
           the rest are hairline-separated readouts that each link out. */}
@@ -137,6 +144,8 @@ export default async function Home() {
           ))}
         </div>
       </Section>
+        </>
+      )}
     </main>
   );
 }

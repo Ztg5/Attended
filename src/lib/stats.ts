@@ -226,13 +226,7 @@ export async function getUserGameSummary(userId: string) {
   };
 }
 
-export async function getDashboard(userId: string): Promise<DashboardData> {
-  const games = (
-    await prisma.game.findMany({ where: attendedByUser(userId), select: gameSelect(userId) })
-  ).map(toLite);
-  const asc = [...games].sort((a, b) => a.date.localeCompare(b.date));
-
-  // The user's own favorite teams — records/streaks are computed only for these.
+async function followedTeamsOf(userId: string): Promise<TeamLite[]> {
   const favUser = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -241,7 +235,33 @@ export async function getDashboard(userId: string): Promise<DashboardData> {
       },
     },
   });
-  const followedTeams: TeamLite[] = favUser?.favoriteTeams ?? [];
+  return favUser?.favoriteTeams ?? [];
+}
+
+export async function getDashboard(userId: string): Promise<DashboardData> {
+  const games = (
+    await prisma.game.findMany({ where: attendedByUser(userId), select: gameSelect(userId) })
+  ).map(toLite);
+  return computeDashboard(games, await followedTeamsOf(userId));
+}
+
+/**
+ * The same dashboard numbers for a PUBLIC viewer (the /s/<token> share page).
+ *
+ * Uses BASE_GAME_SELECT, which omits the Attendance join entirely — so `notes`
+ * and `favorited` come back null/false and a stranger can never read the
+ * owner's private notes. Do not swap this to gameSelect().
+ */
+export async function getPublicDashboard(userId: string): Promise<DashboardData> {
+  const games = (
+    await prisma.game.findMany({ where: attendedByUser(userId), select: BASE_GAME_SELECT })
+  ).map(toLite);
+  return computeDashboard(games, await followedTeamsOf(userId));
+}
+
+/** Pure derivation shared by the private and public dashboards — no DB, no notes. */
+function computeDashboard(games: GameLite[], followedTeams: TeamLite[]): DashboardData {
+  const asc = [...games].sort((a, b) => a.date.localeCompare(b.date));
   const followedIds = new Set(followedTeams.map((t) => t.id));
 
   // Records (overall + per followed team).
