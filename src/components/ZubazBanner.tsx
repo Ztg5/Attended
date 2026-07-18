@@ -32,7 +32,7 @@ const BANDS = 8;
 export function ZubazBanner({
   primary,
   secondary,
-  height = 64,
+  height = 32,
   className = "",
 }: {
   primary: string | null;

@@ -68,7 +68,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
         <ZubazBanner
           primary={bannerTeam.primaryColor}
           secondary={bannerTeam.secondaryColor}
-          height={72}
+          height={36}
         />
       )}
 
